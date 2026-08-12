@@ -25,27 +25,26 @@ import java.util.concurrent.Executors;
 public class _8_Non_AI_Agents {
 
     static {
-        CustomLogging.setLevel(LogLevels.PRETTY, 100);  // control how much you see from the model calls
+        CustomLogging.setLevel(LogLevels.PRETTY, 100);  // 控制从模型调用中可见的信息量
     }
 
     /**
-     * Here we how to use non-AI agents (plain Java operators) within agentic workflows.
-     * Non-AI agents are simply methods, but can be used as any other type of agent.
-     * They are perfect for deterministic operations like calculations, data transformations,
-     * and aggregations, where you rather have no LLM involvement.
-     * The more steps you can outsource to non-AI agents, the faster, correcter and cheaper your workflows will be.
-     * Non-AI agents are preferred over tools for workflows where you want to enforce determinism for certain steps.
-     * In this case we want the aggregated score of the reviewers to be calculated deterministically, not by an LLM.
-     * We also update the application status in the database deterministically based on the aggregated score.
+     * 这里演示如何在智能体工作流中使用"非 AI 智能体"（即普通的 Java 方法/运算符）。
+     * 非 AI 智能体本质上就是普通方法，但可以像其它类型的 Agent 一样使用。
+     * 它们非常适合确定性操作（计算、数据转换、聚合）——这类场景我们希望完全没有 LLM 参与。
+     * 工作流中点能被外包给非 AI 智能体的步骤越多，就越快、越准、越便宜。
+     * 当某个步骤需要强制"确定性"时，非 AI 智能体优先于工具（tool）。
+     * 本例中我们就希望评审的平均分由程序确定性计算（而非 LLM 算），
+     * 并根据聚合后的分数以确定性方式更新数据库中的应聘状态。
      */
 
     private static final ChatModel CHAT_MODEL = ChatModelProvider.createChatModel();
 
     public static void main(String[] args) throws IOException {
 
-        // 1. Define the ScoreAggregator non-AI agents in this pacckage
+        // 1. 本包中的 ScoreAggregator 等非 AI 智能体直接声明即可
 
-        // 2. Build the AI sub-agents for the parallel review step
+        // 2. 构建并行评审步骤所需的 AI 子智能体
         HrCvReviewer hrReviewer = AgenticServices.agentBuilder(HrCvReviewer.class)
                 .chatModel(CHAT_MODEL)
                 .outputKey("hrReview")
@@ -61,8 +60,8 @@ public class _8_Non_AI_Agents {
                 .outputKey("teamMemberReview")
                 .build();
 
-        // 3. Build the composed parallel agent
-        var executor = Executors.newFixedThreadPool(3);  // keep a reference for later closing
+        // 3. 构建"并行评审"的组合 Agent
+        var executor = Executors.newFixedThreadPool(3);  // 保留引用，稍后需要关闭
 
         UntypedAgent parallelReviewWorkflow = AgenticServices
                 .parallelBuilder()
@@ -70,22 +69,22 @@ public class _8_Non_AI_Agents {
                 .executor(executor)
                 .build();
 
-        // 4. Build the full workflow incl. non-AI agent
+        // 4. 构建完整工作流（包含非 AI 智能体）
         UntypedAgent collectFeedback = AgenticServices
                 .sequenceBuilder()
                 .subAgents(
                         parallelReviewWorkflow,
-                        new ScoreAggregator(), // no AgenticServices builder needed for non-AI agents. outputKey 'combinedCvReview' is defined in the class
-                        new StatusUpdate(), // takes 'combinedCvReview' as input, no output needed
-                        AgenticServices.agentAction(agenticScope -> { // another way to add non-AI agents that can operate on the AgenticScope
+                        new ScoreAggregator(), // 非 AI 智能体无需 AgenticServices 构建器；outputKey 已在类内定义为 'combinedCvReview'
+                        new StatusUpdate(), // 以 'combinedCvReview' 作为输入，无需输出
+                        AgenticServices.agentAction(agenticScope -> { // 另一种添加非 AI 智能体的方式：直接操作 AgenticScope
                             CvReview review = (CvReview) agenticScope.readState("combinedCvReview");
-                            agenticScope.writeState("scoreAsPercentage", review.score * 100); // when agents from different systems communicate, output conversion is often needed
+                            agenticScope.writeState("scoreAsPercentage", review.score * 100); // 不同系统间的 Agent 通信往往需要做输出换算
                         })
                 )
-                .outputKey("scoreAsPercentage") // outputKey defined on the non-AI agent annotation in ScoreAggregator.java
+                .outputKey("scoreAsPercentage") // outputKey 来自 ScoreAggregator.java 上的非 AI 智能体注解
                 .build();
 
-        // 5. Load input data
+        // 5. 加载输入数据
         String candidateCv = StringLoader.loadFromResource("/documents/tailored_cv.txt");
         String candidateContact = StringLoader.loadFromResource("/documents/candidate_contact.txt");
         String hrRequirements = StringLoader.loadFromResource("/documents/hr_requirements.txt");
@@ -100,13 +99,13 @@ public class _8_Non_AI_Agents {
                 "jobDescription", jobDescription
         );
 
-        // 6. Invoke the workflow
+        // 6. 调用整个工作流
         double scoreAsPercentage = (double) collectFeedback.invoke(arguments);
         executor.shutdown();
 
-        System.out.println("=== SCORE AS PERCENTAGE ===");
+        System.out.println("=== 评分百分比（百分制） ===");
         System.out.println(scoreAsPercentage);
-        // as we can see in the logs, the application status has also been updated accordingly
+        // 从日志可见，应聘状态也已被同步更新
 
     }
 }

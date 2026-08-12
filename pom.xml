@@ -10,55 +10,205 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>agentic-tutorial</module>
-        <module>anthropic-examples</module>
-        <module>azure-open-ai-customer-support-agent-example</module>
-        <module>azure-open-ai-examples</module>
-        <module>bedrock-examples</module>
-        <module>chroma-example</module>
-        <module>couchbase-example</module>
-        <module>customer-support-agent-example</module>
-        <module>elasticsearch-example</module>
-        <module>github-models-examples</module>
-        <module>google-ai-gemini-examples</module>
-        <module>google-alloydb-example</module>
-        <module>gpullama3.java-example</module>
-        <module>helidon-examples</module>
-        <module>hibernate-example</module>
-        <module>infinispan-example</module>
-        <module>jakartaee-microprofile-example</module>
-        <module>javafx-example</module>
-        <module>jlama-examples</module>
-        <module>mcp-example</module>
-        <module>mcp-github-example</module>
-        <module>milvus-example</module>
-        <module>mistral-ai-examples</module>
-        <module>native-java-gemini-function-calling-example</module>
-        <module>neo4j-example</module>
-        <module>ollama-examples</module>
-        <module>open-ai-examples</module>
-        <module>opensearch-example</module>
-        <module>oracle-example</module>
-        <module>other-examples</module>
-        <module>ovh-ai-examples</module>
-        <module>payara-micro-example</module>
-        <module>pgvector-example</module>
-        <module>pinecone-example</module>
-        <module>qdrant-example</module>
-        <module>quarkus-example</module>
-        <module>rag-examples</module>
-        <module>redis-example</module>
-        <module>spring-boot4-example</module>
-        <module>spring-boot-example</module>
+        <!-- description: LangChain4j 官方入门教程，从 HelloWorld 到 AI Service 渐进式教学
+             context: 对话、模型参数、提示词模板、流式、记忆、FewShot、AI Service、工具、RAG 基础
+             necessary: 是 -->
         <module>tutorials</module>
+        <!-- description: 各种零散的 LangChain4j 通用示例合集
+             context: 记忆、持久化记忆、工具、流式、文档加载、Embedding、AutoModeration 等散例
+             necessary: 是 -->
+        <module>other-examples</module>
+        <!-- description: LangChain4j 官方 AI Agent 进阶教程，9 层工作流从基础到多 Agent 编排
+             context: 教构建顺序/循环/并行/条件/组合/Supervisor 编排、非 AI Agent、Human-in-the-loop 等 9 种 Agent 工作流
+             necessary: 是 -->
+        <module>agentic-tutorial</module>
+        <!-- description: LangChain4j 官方完整客服 Agent 应用（记忆+工具+RAG+Spring Boot）
+             context: 综合运用 AiServices、工具调用、持久化记忆、检索器、REST 控制器构建生产级 Agent
+             necessary: 是 -->
+        <module>customer-support-agent-example</module>
+        <!-- description: LangChain4j 官方 RAG 专题，Easy→Naive→Advanced→Low-level 分层
+             context: 学习 RAG 全流程：检索、重排、query 路由、metadata 过滤、web search、低层 API 等 15 例
+             necessary: 是 -->
+        <module>rag-examples</module>
+        <!-- description: Spring Boot 3 集成 LangChain4j 的官方示例
+             context: 生产级 AI 应用骨架：AI Service、工具、流式、监听器、低层 API、REST 控制器
+             necessary: 是 -->
+        <module>spring-boot-example</module>
+        <!-- description: OpenAI 全能力集成示例（官方 API）
+             context: Chat、流式、Embedding、图像、音频、函数调用、可观测性、结构化输出
+             necessary: 是 -->
+        <module>open-ai-examples</module>
+        <!-- description: MCP(Model Context Protocol) 工具接入示例
+             context: 通过 MCP 协议把外部工具接入 Agent（HTTP / stdio 两种方式）
+             necessary: 是 -->
+        <module>mcp-example</module>
+        <!-- description: PostgreSQL + pgvector 扩展做向量存储示例
+             context: 关系库上跑 RAG 的向量检索（含 metadata），Java 项目最常用 RAG 存储
+             necessary: 是 -->
+        <module>pgvector-example</module>
+        <!-- description: Ollama 本地运行开源模型的示例（含 Testcontainers）
+             context: 本地免 API Key 跑 Chat/流式，用容器化测试，国内友好
+             necessary: 是 -->
+        <module>ollama-examples</module>
+        <!-- description: Anthropic(Claude) 大模型接入示例
+             context: Claude 的 Chat / 流式 / Tools 三种用法
+             necessary: 否 -->
+        <module>anthropic-examples</module>
+        <!-- description: 用 Azure OpenAI 实现的完整客服 Agent 应用
+             context: 与 customer-support-agent-example 相同，仅把厂商换成 Azure OpenAI，看云厂商无关集成
+             necessary: 否 -->
+        <module>azure-open-ai-customer-support-agent-example</module>
+        <!-- description: Azure OpenAI 云服务的完整集成示例
+             context: Azure OpenAI 的 Chat、Embedding、DALL-E 图像、函数调用、安全策略、流式输出
+             necessary: 否 -->
+        <module>azure-open-ai-examples</module>
+        <!-- description: AWS Bedrock 云服务接入示例
+             context: 通过 Bedrock 调用 Claude 等模型的 Chat 与流式对话
+             necessary: 否 -->
+        <module>bedrock-examples</module>
+        <!-- description: Chroma 向量数据库作为 EmbeddingStore 的示例
+             context: Chroma 存储/检索向量（含 metadata 过滤）
+             necessary: 否 -->
+        <module>chroma-example</module>
+        <!-- description: Couchbase 数据库向量检索示例
+             context: 用 Couchbase 做 Embedding 搜索
+             necessary: 否 -->
+        <module>couchbase-example</module>
+        <!-- description: Elasticsearch 作为 EmbeddingStore 的示例
+             context: ES 向量存储与检索（含 script 打分）
+             necessary: 否 -->
+        <module>elasticsearch-example</module>
+        <!-- description: 通过 GitHub Models 免费体验各家模型的示例
+             context: Chat、流式、Embedding、函数调用的统一用法
+             necessary: 否 -->
+        <module>github-models-examples</module>
+        <!-- description: Google Gemini 大模型完整示例（15 个例子）
+             context: Gemini 的 Chat、流式、Embedding、多模态、Thinking、安全设置、批量处理等
+             necessary: 否 -->
+        <module>google-ai-gemini-examples</module>
+        <!-- description: Google AlloyDB 作为向量存储的示例
+             context: AlloyDB 存储向量（含 metadata）
+             necessary: 否 -->
+        <module>google-alloydb-example</module>
+        <!-- description: 在 GPU 上运行 Llama 3 大模型并用 LangChain4j 调用
+             context: 本地 Llama3 的 Chat/流式 + Agent 工作流跑法
+             necessary: 否 -->
+        <module>gpullama3.java-example</module>
+        <!-- description: Oracle Helidon 框架集成 LangChain4j 的咖啡店助手应用
+             context: 用 Helidon SE/MP 构建带 RAG 和工具的 Agent，了解其他 Java 框架集成方式
+             necessary: 否 -->
+        <module>helidon-examples</module>
+        <!-- description: 用 Hibernate ORM 把向量存储到关系库的示例
+             context: Hibernate 存储 Embedding（自定义/动态 schema、metadata）
+             necessary: 否 -->
+        <module>hibernate-example</module>
+        <!-- description: Infinispan 作为 EmbeddingStore 的示例
+             context: Infinispan 向量存储
+             necessary: 否 -->
+        <module>infinispan-example</module>
+        <!-- description: Jakarta EE(MicroProfile) 框架集成 LangChain4j 示例
+             context: 传统 Java EE 技术栈上构建 AI Chat 服务和 REST 接口
+             necessary: 否 -->
+        <module>jakartaee-microprofile-example</module>
+        <!-- description: 用 JavaFX 做桌面聊天应用的示例
+             context: JavaFX 桌面 UI + LangChain4j 的对话与工具调用
+             necessary: 否 -->
+        <module>javafx-example</module>
+        <!-- description: Jlama(纯 Java 本地 LLM) 集成示例
+             context: 本地跑 Chat/流式/函数调用/RAG 的纯 Java 方案
+             necessary: 否 -->
+        <module>jlama-examples</module>
+        <!-- description: 通过 MCP 调用 GitHub 工具的示例
+             context: 演示 MCP 接入第三方服务，Agent 直接操作 GitHub
+             necessary: 否 -->
+        <module>mcp-github-example</module>
+        <!-- description: Milvus 向量数据库作为 EmbeddingStore 示例
+             context: Milvus 向量存储（业界常用生产级向量库）
+             necessary: 否 -->
+        <module>milvus-example</module>
+        <!-- description: Mistral AI 大模型接入示例
+             context: Chat / 流式 / 函数调用 / 基础 RAG
+             necessary: 否 -->
+        <module>mistral-ai-examples</module>
+        <!-- description: 不用 LangChain4j 抽象，原生 Java + Gemini API 手写函数调用
+             context: 理解函数调用底层原理（HTTP + JSON 手动处理）
+             necessary: 否 -->
+        <module>native-java-gemini-function-calling-example</module>
+        <!-- description: Neo4j 图数据库做向量存储和内容检索的示例
+             context: 图数据库 + RAG 的 ContentRetriever 用法
+             necessary: 否 -->
+        <module>neo4j-example</module>
+        <!-- description: OpenSearch 作为 EmbeddingStore 示例
+             context: OpenSearch 向量存储
+             necessary: 否 -->
+        <module>opensearch-example</module>
+        <!-- description: Oracle 数据库向量存储示例
+             context: Oracle 23ai 向量检索
+             necessary: 否 -->
+        <module>oracle-example</module>
+        <!-- description: OVHcloud AI 云模型嵌入示例
+             context: OVH Embedding 与简单 RAG
+             necessary: 否 -->
+        <module>ovh-ai-examples</module>
+        <!-- description: Payara Micro(Jakarta EE) 集成示例
+             context: 用 Payara 跑各家模型的 REST Chat 服务
+             necessary: 否 -->
+        <module>payara-micro-example</module>
+        <!-- description: Pinecone 云向量数据库示例
+             context: Pinecone 向量存储
+             necessary: 否 -->
+        <module>pinecone-example</module>
+        <!-- description: Qdrant 向量数据库示例
+             context: Qdrant 向量存储
+             necessary: 否 -->
+        <module>qdrant-example</module>
+        <!-- description: Quarkus 框架集成 LangChain4j 的评论分诊示例
+             context: Quarkus + AI 服务做结构化文本分诊（面向 Quarkus 生态开发者）
+             necessary: 否 -->
+        <module>quarkus-example</module>
+        <!-- description: Redis 作为 EmbeddingStore 示例
+             context: Redis 向量存储
+             necessary: 否 -->
+        <module>redis-example</module>
+        <!-- description: Spring Boot 4 集成 LangChain4j 示例
+             context: 新版 Spring Boot 上构建 AI Assistant（AI 服务 + 工具 + 监听器）
+             necessary: 否 -->
+        <module>spring-boot4-example</module>
+        <!-- description: Google Cloud Vertex AI 上使用 Gemini 示例
+             context: Vertex AI 托管的 Gemini Chat
+             necessary: 否 -->
         <module>vertex-ai-gemini-examples</module>
+        <!-- description: Vespa 搜索引擎做向量存储示例
+             context: Vespa 向量检索
+             necessary: 否 -->
         <module>vespa-example</module>
+        <!-- description: Voyage AI 嵌入/打分模型示例
+             context: Embedding 和 Rerank(重排) 模型用法
+             necessary: 否 -->
         <module>voyage-ai-examples</module>
+        <!-- description: IBM watsonx.ai 平台集成示例
+             context: Chat、流式、Embedding、打分、推理、Moderation、Tools
+             necessary: 否 -->
         <module>watsonx-ai-examples</module>
+        <!-- description: Weaviate 向量数据库示例
+             context: Weaviate 向量存储
+             necessary: 否 -->
         <module>weaviate-example</module>
+        <!-- description: WildFly(Jakarta EE) 集成示例
+             context: WildFly 上用 SSE 流式推送 AI 聊天
+             necessary: 否 -->
         <module>wildfly-example</module>
+        <!-- description: JVector(纯 Java 向量索引库) 示例
+             context: JVector 向量存储
+             necessary: 否 -->
         <module>jvector-example</module>
+        <!-- description: Amazon S3 上的向量存储示例
+             context: S3 Vectors 存向量（含 metadata）
+             necessary: 否 -->
         <module>s3-vectors-example</module>
+        <!-- description: YugabyteDB 分布式数据库向量存储示例
+             context: YugabyteDB 向量检索 + PG 驱动兼容
+             necessary: 否 -->
         <module>yugabytedb-example</module>
     </modules>
 

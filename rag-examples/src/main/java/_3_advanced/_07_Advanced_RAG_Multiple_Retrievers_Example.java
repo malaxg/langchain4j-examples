@@ -31,15 +31,19 @@ import static dev.langchain4j.data.document.loader.FileSystemDocumentLoader.load
 import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_O_MINI;
 import static shared.Utils.*;
 
+
 public class _07_Advanced_RAG_Multiple_Retrievers_Example {
 
 
     /**
-     * Please refer to {@link Naive_RAG_Example} for a basic context.
+     * 请先参考 {@link Naive_RAG_Example} 了解基础概念。
      * <p>
-     * Advanced RAG in LangChain4j is described here: https://github.com/langchain4j/langchain4j/pull/538
+     * LangChain4j 中高级 RAG 的说明：https://github.com/langchain4j/langchain4j/pull/538
      * <p>
-     * This example demonstrates how to use multiple content retrievers.
+     * 这个示例教了什么 RAG 技巧：<b>同时使用多个内容检索器（Multiple Content Retrievers）</b>。
+     * 当数据分散在多个来源时，你可以为每个来源各建一个检索器，
+     * 再用 {@link DefaultQueryRouter} 把每个查询同时路由到所有这些检索器，
+     * 这样一次回答就能综合多个来源的信息。
      */
 
     public static void main(String[] args) {
@@ -51,9 +55,10 @@ public class _07_Advanced_RAG_Multiple_Retrievers_Example {
 
     private static Assistant createAssistant() {
 
+        // 创建嵌入模型
         EmbeddingModel embeddingModel = new BgeSmallEnV15QuantizedEmbeddingModel();
 
-        // Let's create our first content retriever.
+        // 创建第一个内容检索器：基于"使用条款"文档
         EmbeddingStore<TextSegment> embeddingStore1 =
                 embed(toPath("documents/miles-of-smiles-terms-of-use.txt"), embeddingModel);
         ContentRetriever contentRetriever1 = EmbeddingStoreContentRetriever.builder()
@@ -63,7 +68,7 @@ public class _07_Advanced_RAG_Multiple_Retrievers_Example {
                 .minScore(0.6)
                 .build();
 
-        // Let's create our second content retriever.
+        // 创建第二个内容检索器：基于"约翰·多伊传记"文档
         EmbeddingStore<TextSegment> embeddingStore2 =
                 embed(toPath("documents/biography-of-john-doe.txt"), embeddingModel);
         ContentRetriever contentRetriever2 = EmbeddingStoreContentRetriever.builder()
@@ -73,13 +78,17 @@ public class _07_Advanced_RAG_Multiple_Retrievers_Example {
                 .minScore(0.6)
                 .build();
 
-        // Let's create a query router that will route each query to both retrievers.
+        // 创建查询路由器（本示例核心技巧）：
+        // 使用 DefaultQueryRouter，会把每个查询同时路由到两个检索器，
+        // 从而综合来自两份文档的信息。
         QueryRouter queryRouter = new DefaultQueryRouter(contentRetriever1, contentRetriever2);
 
+        // 把查询路由器装配进检索增强器
         RetrievalAugmentor retrievalAugmentor = DefaultRetrievalAugmentor.builder()
                 .queryRouter(queryRouter)
                 .build();
 
+        // 创建聊天模型（LLM），用于最终回答
         ChatModel model = OpenAiChatModel.builder()
                 .apiKey(OPENAI_API_KEY)
                 .modelName(GPT_4_O_MINI)
@@ -93,16 +102,16 @@ public class _07_Advanced_RAG_Multiple_Retrievers_Example {
     }
 
     private static EmbeddingStore<TextSegment> embed(Path documentPath, EmbeddingModel embeddingModel) {
-        DocumentParser documentParser = new TextDocumentParser();
-        Document document = loadDocument(documentPath, documentParser);
+        DocumentParser documentParser = new TextDocumentParser(); // 文本解析器
+        Document document = loadDocument(documentPath, documentParser); // 加载文档
 
-        DocumentSplitter splitter = DocumentSplitters.recursive(300, 0);
-        List<TextSegment> segments = splitter.split(document);
+        DocumentSplitter splitter = DocumentSplitters.recursive(300, 0); // 递归切分
+        List<TextSegment> segments = splitter.split(document); // 得到片段列表
 
-        List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
+        List<Embedding> embeddings = embeddingModel.embedAll(segments).content(); // 向量化
 
-        EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
-        embeddingStore.addAll(embeddings, segments);
-        return embeddingStore;
+        EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>(); // 内存向量存储
+        embeddingStore.addAll(embeddings, segments); // 入库
+        return embeddingStore; // 返回向量存储
     }
 }

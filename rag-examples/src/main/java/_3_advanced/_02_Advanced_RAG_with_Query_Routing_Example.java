@@ -36,49 +36,49 @@ import static shared.Utils.*;
 public class _02_Advanced_RAG_with_Query_Routing_Example {
 
     /**
-     * Please refer to {@link Naive_RAG_Example} for a basic context.
+     * 请先参考 {@link Naive_RAG_Example} 了解基础概念。
      * <p>
-     * Advanced RAG in LangChain4j is described here: https://github.com/langchain4j/langchain4j/pull/538
+     * LangChain4j 中高级 RAG 的说明：https://github.com/langchain4j/langchain4j/pull/538
      * <p>
-     * This example showcases the implementation of a more advanced RAG application
-     * using a technique known as "query routing".
+     * 这个示例教了什么 RAG 技巧：<b>查询路由（Query Routing）</b>。
      * <p>
-     * Often, private data is spread across multiple sources and formats.
-     * This might include internal company documentation on Confluence, your project's code in a Git repository,
-     * a relational database with user data, or a search engine with the products you sell, among others.
-     * In a RAG flow that utilizes data from multiple sources, you will likely have multiple
-     * {@link EmbeddingStore}s or {@link ContentRetriever}s.
-     * While you could route each user query to all available {@link ContentRetriever}s,
-     * this approach might be inefficient and counterproductive.
+     * 现实中的私有数据往往分散在多个来源、多种格式中，
+     * 例如 Confluence 里的公司内部文档、Git 仓库里的项目代码、
+     * 存有用户数据的关系型数据库、售卖产品的搜索引擎等等。
+     * 当 RAG 流程使用多个数据源时，你通常会有多个 {@link EmbeddingStore} 或 {@link ContentRetriever}。
+     * 虽然你可以把每个用户查询都路由到所有 {@link ContentRetriever}，
+     * 但这种做法既低效，有时还会适得其反。
      * <p>
-     * "Query routing" is the solution to this challenge. It involves directing a query to the most appropriate
-     * {@link ContentRetriever} (or several). Routing can be implemented in various ways:
-     * - Using rules (e.g., depending on the user's privileges, location, etc.).
-     * - Using keywords (e.g., if a query contains words X1, X2, X3, route it to {@link ContentRetriever} X, etc.).
-     * - Using semantic similarity (see EmbeddingModelTextClassifierExample in this repository).
-     * - Using an LLM to make a routing decision.
+     * "查询路由"正是解决这个问题的方法：把查询定向到最合适的（一个或多个）{@link ContentRetriever}。
+     * 路由可以用多种方式实现：
+     * - 基于规则（例如根据用户的权限、地理位置等）。
+     * - 基于关键词（例如查询中包含 X1、X2、X3 就路由到 {@link ContentRetriever} X 等）。
+     * - 基于语义相似度（参见本仓库中的 EmbeddingModelTextClassifierExample）。
+     * - 用 LLM 来做路由决策。
      * <p>
-     * For scenarios 1, 2, and 3, you can implement a custom {@link QueryRouter}.
-     * For scenario 4, this example will demonstrate how to use a {@link LanguageModelQueryRouter}.
+     * 对于第 1、2、3 种场景，你可以实现一个自定义的 {@link QueryRouter}。
+     * 第 4 种场景，本示例会演示如何使用 {@link LanguageModelQueryRouter}。
      */
 
     public static void main(String[] args) {
 
         Assistant assistant = createAssistant();
 
-        // First, ask "What is the legacy of John Doe?"
-        // Then, ask "Can I cancel my reservation?"
-        // Now, see the logs to observe how the queries are routed to different retrievers.
+        // 先问 "What is the legacy of John Doe?"（约翰·多伊留下了什么遗产？）
+        // 再问 "Can I cancel my reservation?"（我可以取消预订吗？）
+        // 然后观察日志，看这两个查询是如何被路由到不同的检索器的。
         startConversationWith(assistant);
     }
 
     private static Assistant createAssistant() {
 
+        // 创建嵌入模型（本地 BGE 模型，把文本向量化）
         EmbeddingModel embeddingModel = new BgeSmallEnV15QuantizedEmbeddingModel();
 
-        // Let's create a separate embedding store specifically for biographies.
+        // 为"传记"文档单独创建一个向量存储（embed 帮助方法负责：切分、向量化、入库）
         EmbeddingStore<TextSegment> biographyEmbeddingStore =
                 embed(toPath("documents/biography-of-john-doe.txt"), embeddingModel);
+        // 从该向量存储创建第一个内容检索器
         ContentRetriever biographyContentRetriever = EmbeddingStoreContentRetriever.builder()
                 .embeddingStore(biographyEmbeddingStore)
                 .embeddingModel(embeddingModel)
@@ -86,9 +86,10 @@ public class _02_Advanced_RAG_with_Query_Routing_Example {
                 .minScore(0.6)
                 .build();
 
-        // Additionally, let's create a separate embedding store dedicated to terms of use.
+        // 同样，为"使用条款"文档单独创建一个向量存储
         EmbeddingStore<TextSegment> termsOfUseEmbeddingStore =
                 embed(toPath("documents/miles-of-smiles-terms-of-use.txt"), embeddingModel);
+        // 创建第二个内容检索器
         ContentRetriever termsOfUseContentRetriever = EmbeddingStoreContentRetriever.builder()
                 .embeddingStore(termsOfUseEmbeddingStore)
                 .embeddingModel(embeddingModel)
@@ -96,17 +97,23 @@ public class _02_Advanced_RAG_with_Query_Routing_Example {
                 .minScore(0.6)
                 .build();
 
+        // 创建聊天模型（LLM），既用于路由决策，也用于最终回答
         ChatModel chatModel = OpenAiChatModel.builder()
                 .apiKey(OPENAI_API_KEY)
                 .modelName(GPT_4_O_MINI)
                 .build();
 
-        // Let's create a query router.
+        // 创建查询路由器（本示例的核心技巧）。
+        // 每个检索器配一段文字描述；LanguageModelQueryRouter 会把"查询 + 这些描述"一起发给 LLM，
+        // 由 LLM 决定把当前查询路由到哪个（或哪些）检索器。
+        // 注意：描述文字用英文，是为了让 LLM 在路由时更容易匹配到对应的检索器。
         Map<ContentRetriever, String> retrieverToDescription = new HashMap<>();
-        retrieverToDescription.put(biographyContentRetriever, "biography of John Doe");
-        retrieverToDescription.put(termsOfUseContentRetriever, "terms of use of car rental company");
+        retrieverToDescription.put(biographyContentRetriever, "biography of John Doe"); // 描述：约翰·多伊的传记
+        retrieverToDescription.put(termsOfUseContentRetriever, "terms of use of car rental company"); // 描述：租车公司的使用条款
         QueryRouter queryRouter = new LanguageModelQueryRouter(chatModel, retrieverToDescription);
 
+        // 把查询路由器装配进检索增强器（这里没有显式设置 contentRetriever，
+        // 因为具体用哪个检索器完全由 QueryRouter 决定）
         RetrievalAugmentor retrievalAugmentor = DefaultRetrievalAugmentor.builder()
                 .queryRouter(queryRouter)
                 .build();
@@ -119,16 +126,16 @@ public class _02_Advanced_RAG_with_Query_Routing_Example {
     }
 
     private static EmbeddingStore<TextSegment> embed(Path documentPath, EmbeddingModel embeddingModel) {
-        DocumentParser documentParser = new TextDocumentParser();
-        Document document = loadDocument(documentPath, documentParser);
+        DocumentParser documentParser = new TextDocumentParser(); // 文本解析器
+        Document document = loadDocument(documentPath, documentParser); // 加载文档
 
-        DocumentSplitter splitter = DocumentSplitters.recursive(300, 0);
-        List<TextSegment> segments = splitter.split(document);
+        DocumentSplitter splitter = DocumentSplitters.recursive(300, 0); // 递归切分：每块 300 token，重叠 0
+        List<TextSegment> segments = splitter.split(document); // 得到文档片段列表
 
-        List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
+        List<Embedding> embeddings = embeddingModel.embedAll(segments).content(); // 把所有片段向量化
 
-        EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
-        embeddingStore.addAll(embeddings, segments);
-        return embeddingStore;
+        EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>(); // 内存向量存储
+        embeddingStore.addAll(embeddings, segments); // 把向量和片段一起存入存储
+        return embeddingStore; // 返回向量存储
     }
 }

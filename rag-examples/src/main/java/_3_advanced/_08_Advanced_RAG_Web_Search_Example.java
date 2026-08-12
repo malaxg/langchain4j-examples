@@ -34,17 +34,21 @@ import static dev.langchain4j.data.document.loader.FileSystemDocumentLoader.load
 import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_O_MINI;
 import static shared.Utils.*;
 
+
 public class _08_Advanced_RAG_Web_Search_Example {
 
 
     /**
-     * Please refer to {@link Naive_RAG_Example} for a basic context.
+     * 请先参考 {@link Naive_RAG_Example} 了解基础概念。
      * <p>
-     * Advanced RAG in LangChain4j is described here: https://github.com/langchain4j/langchain4j/pull/538
+     * LangChain4j 中高级 RAG 的说明：https://github.com/langchain4j/langchain4j/pull/538
      * <p>
-     * This example demonstrates how to use web search engine as an additional content retriever.
+     * 这个示例教了什么 RAG 技巧：<b>把搜索引擎（Web Search）作为额外的内容检索器</b>。
+     * 向量检索只覆盖你本地入库的文档；当问题涉及私有文档之外的实时信息时，
+     * 可以再挂一个网页搜索检索器（如 Tavily），
+     * 并用 {@link DefaultQueryRouter} 把查询同时路由给"本地向量检索器"和"网页搜索检索器"。
      * <p>
-     * This example requires "langchain4j-web-search-engine-tavily" dependency.
+     * 本示例需要引入 "langchain4j-web-search-engine-tavily" 依赖。
      */
 
     public static void main(String[] args) {
@@ -56,7 +60,7 @@ public class _08_Advanced_RAG_Web_Search_Example {
 
     private static Assistant createAssistant() {
 
-        // Let's create our embedding store content retriever.
+        // 第一个检索器：基于本地向量存储的检索器
         EmbeddingModel embeddingModel = new BgeSmallEnV15QuantizedEmbeddingModel();
 
         EmbeddingStore<TextSegment> embeddingStore =
@@ -69,23 +73,27 @@ public class _08_Advanced_RAG_Web_Search_Example {
                 .minScore(0.6)
                 .build();
 
-        // Let's create our web search content retriever.
+        // 第二个检索器：网页搜索检索器（本示例核心技巧）。
+        // 先用 Tavily 搜索引擎（网页搜索 API）建一个 WebSearchEngine，
+        // 再包一层 WebSearchContentRetriever，让它能作为 RAG 的检索器使用。
         WebSearchEngine webSearchEngine = TavilyWebSearchEngine.builder()
-                .apiKey(System.getenv("TAVILY_API_KEY")) // get a free key: https://app.tavily.com/sign-in
+                .apiKey(System.getenv("TAVILY_API_KEY")) // 免费 Key：https://app.tavily.com/sign-in
                 .build();
 
         ContentRetriever webSearchContentRetriever = WebSearchContentRetriever.builder()
                 .webSearchEngine(webSearchEngine)
-                .maxResults(3)
+                .maxResults(3) // 每个查询取 3 条网页搜索结果
                 .build();
 
-        // Let's create a query router that will route each query to both retrievers.
+        // 查询路由器：把每个查询同时路由给两个检索器（本地向量 + 网页搜索）
         QueryRouter queryRouter = new DefaultQueryRouter(embeddingStoreContentRetriever, webSearchContentRetriever);
 
+        // 装配进检索增强器
         RetrievalAugmentor retrievalAugmentor = DefaultRetrievalAugmentor.builder()
                 .queryRouter(queryRouter)
                 .build();
 
+        // 创建聊天模型（LLM），用于最终回答
         ChatModel model = OpenAiChatModel.builder()
                 .apiKey(OPENAI_API_KEY)
                 .modelName(GPT_4_O_MINI)
@@ -99,16 +107,16 @@ public class _08_Advanced_RAG_Web_Search_Example {
     }
 
     private static EmbeddingStore<TextSegment> embed(Path documentPath, EmbeddingModel embeddingModel) {
-        DocumentParser documentParser = new TextDocumentParser();
-        Document document = loadDocument(documentPath, documentParser);
+        DocumentParser documentParser = new TextDocumentParser(); // 文本解析器
+        Document document = loadDocument(documentPath, documentParser); // 加载文档
 
-        DocumentSplitter splitter = DocumentSplitters.recursive(300, 0);
-        List<TextSegment> segments = splitter.split(document);
+        DocumentSplitter splitter = DocumentSplitters.recursive(300, 0); // 递归切分
+        List<TextSegment> segments = splitter.split(document); // 得到片段列表
 
-        List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
+        List<Embedding> embeddings = embeddingModel.embedAll(segments).content(); // 向量化
 
-        EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
-        embeddingStore.addAll(embeddings, segments);
-        return embeddingStore;
+        EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>(); // 内存向量存储
+        embeddingStore.addAll(embeddings, segments); // 入库
+        return embeddingStore; // 返回向量存储
     }
 }

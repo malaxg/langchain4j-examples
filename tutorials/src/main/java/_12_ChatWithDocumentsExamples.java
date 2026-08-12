@@ -1,6 +1,13 @@
 
 /**
- * See examples from "rag-examples" module.
+ * 教程第 12 课：基于文档的问答（Chat with Documents / RAG）。
+ * <p>
+ * 本文件本身没有可运行的代码，只是一个"指路牌"：基于文档的问答（RAG，检索增强生成）
+ * 涉及从文档切分、向量化、向量数据库检索到生成回答的一整套流程，
+ * 完整的可运行示例请参考本仓库中的 "rag-examples" 模块。
+ * <p>
+ * RAG 的核心思路：先从用户问题中检索出最相关的文档片段，
+ * 再把"问题 + 相关片段"一起交给 LLM 生成回答，让回答有据可依。
  */
 public class _12_ChatWithDocumentsExamples {
 

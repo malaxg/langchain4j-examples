@@ -12,19 +12,35 @@ import java.util.Map;
 import static embedding.classification.EmbeddingModelTextClassifierExample.CustomerServiceCategory.*;
 import static java.util.Arrays.asList;
 
+/**
+ * 演示如何使用基于 Embedding 模型的文本分类器（EmbeddingModelTextClassifier）。
+ * <p>
+ * 原理：为每个类别准备若干"示例文本"（few-shot 样本），
+ * 用 EmbeddingModel 把示例与待分类文本都转成向量，再通过相似度把文本归类。
+ * 这里用本地的 all-MiniLM-L6-v2 模型离线完成文本分类。
+ */
 public class EmbeddingModelTextClassifierExample {
 
+    // 客服工单的类别枚举（用于给用户的提问归类）
     enum CustomerServiceCategory {
 
-        BILLING_AND_PAYMENTS,
-        TECHNICAL_SUPPORT,
-        ACCOUNT_MANAGEMENT,
-        PRODUCT_INFORMATION,
-        ORDER_STATUS,
-        RETURNS_AND_EXCHANGES,
-        FEEDBACK_AND_COMPLAINTS
+        BILLING_AND_PAYMENTS,    // 账单与支付
+        TECHNICAL_SUPPORT,       // 技术支持
+        ACCOUNT_MANAGEMENT,      // 账号管理
+        PRODUCT_INFORMATION,     // 产品信息
+        ORDER_STATUS,            // 订单状态
+        RETURNS_AND_EXCHANGES,   // 退货与换货
+        FEEDBACK_AND_COMPLAINTS  // 反馈与投诉
     }
 
+    /**
+     * 程序入口主方法。
+     * <p>
+     * 流程：准备每个类别对应的示例文本 → 创建 EmbeddingModel →
+     * 用 EmbeddingModelTextClassifier 进行分类 → 打印分类结果。
+     *
+     * @param args 命令行参数（本示例不使用）
+     */
     public static void main(String[] args) {
 
         Map<CustomerServiceCategory, List<String>> examples = new HashMap<>();
@@ -169,11 +185,14 @@ public class EmbeddingModelTextClassifierExample {
                 "I wish you had more colors to choose from."
         ));
 
+        // 创建本地 Embedding 模型（在 Java 进程内离线运行，无需联网）
         EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
+        // 用 Embedding 模型 + 各分类示例文本构建一个文本分类器
         TextClassifier<CustomerServiceCategory> classifier = new EmbeddingModelTextClassifier<>(embeddingModel, examples);
 
+        // 对一条待分类文本进行分类：模型会返回最可能的类别（可多个）
         List<CustomerServiceCategory> categories = classifier.classify("Yo where is my package?");
 
-        System.out.println(categories); // [ORDER_STATUS]
+        System.out.println(categories); // [ORDER_STATUS]（订单状态）
     }
 }

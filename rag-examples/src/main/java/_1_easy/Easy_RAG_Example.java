@@ -21,47 +21,55 @@ import static shared.Utils.*;
 
 public class Easy_RAG_Example {
 
+    // 聊天模型（LLM）：整个应用共享一个，负责回答用户的问题。
+    // 本例使用 OpenAI 的 gpt-4o-mini。
     private static final ChatModel CHAT_MODEL = OpenAiChatModel.builder()
             .apiKey(OPENAI_API_KEY)
             .modelName(GPT_4_O_MINI)
             .build();
 
     /**
-     * This example demonstrates how to implement an "Easy RAG" (Retrieval-Augmented Generation) application.
-     * By "easy" we mean that we won't dive into all the details about parsing, splitting, embedding, etc.
-     * All the "magic" is hidden inside the "langchain4j-easy-rag" module.
+     * 这个示例演示了如何实现一个 "Easy RAG"（检索增强生成）应用。
+     * 这里的 "Easy" 意味着我们不会深入讲解文档解析、切分、向量化等底层细节，
+     * 所有 "魔法" 都被隐藏在 "langchain4j-easy-rag" 模块中。
      * <p>
-     * If you want to learn how to do RAG without the "magic" of an "Easy RAG", see {@link Naive_RAG_Example}.
+     * 如果你想了解如何在没有 "Easy RAG" 魔法的情况下亲手实现 RAG，
+     * 请参考 {@link Naive_RAG_Example}（朴素 RAG 示例）。
      */
 
     public static void main(String[] args) {
 
-        // First, let's load documents that we want to use for RAG
+        // 第一步：加载我们想要用于 RAG 的文档。
+        // loadDocuments 会从文件系统中加载所有名字匹配 "*.txt" 的文档。
         List<Document> documents = loadDocuments(toPath("documents/"), glob("*.txt"));
 
-        // Second, let's create an assistant that will have access to our documents
+        // 第二步：创建一个能访问我们文档的助手（AI Service）。
+        // AiServices.builder 会用代理/反射自动为 Assistant 接口生成实现。
         Assistant assistant = AiServices.builder(Assistant.class)
-                .chatModel(CHAT_MODEL) // it should use OpenAI LLM
-                .chatMemory(MessageWindowChatMemory.withMaxMessages(10)) // it should remember 10 latest messages
-                .contentRetriever(createContentRetriever(documents)) // it should have access to our documents
+                .chatModel(CHAT_MODEL) // 让它使用 OpenAI 的 LLM 来回答问题
+                .chatMemory(MessageWindowChatMemory.withMaxMessages(10)) // 让它记住最近 10 条消息
+                .contentRetriever(createContentRetriever(documents)) // 让它能访问到我们的文档
                 .build();
 
-        // Lastly, let's start the conversation with the assistant. We can ask questions like:
-        // - Can I cancel my reservation?
-        // - I had an accident, should I pay extra?
+        // 最后：与助手开始对话。你可以像下面这样提问：
+        // - 我可以取消预订吗？
+        // - 我出了事故，需要额外付费吗？
         startConversationWith(assistant);
     }
 
     private static ContentRetriever createContentRetriever(List<Document> documents) {
 
-        // Here, we create an empty in-memory store for our documents and their embeddings.
+        // 创建一个空的"内存向量存储"，用来存放文档及其向量表示（Embedding）。
+        // InMemoryEmbeddingStore 表示数据只保存在内存中（进程退出后丢失），适合学习和演示。
         InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
 
-        // Here, we are ingesting our documents into the store.
-        // Under the hood, a lot of "magic" is happening, but we can ignore it for now.
+        // 把文档"摄入"（ingest）到向量存储中。
+        // 底层会自动完成：切分文档 -> 把片段向量化 -> 把向量和片段存入存储。
+        // 这一系列"魔法"现在可以先忽略细节，Easy RAG 模块已经帮我们做好了。
         EmbeddingStoreIngestor.ingest(documents, embeddingStore);
 
-        // Lastly, let's create a content retriever from an embedding store.
+        // 最后，从向量存储创建一个内容检索器（ContentRetriever）。
+        // 它的作用：收到用户问题后，在向量存储中找出与问题最相关的文档片段。
         return EmbeddingStoreContentRetriever.from(embeddingStore);
     }
 }

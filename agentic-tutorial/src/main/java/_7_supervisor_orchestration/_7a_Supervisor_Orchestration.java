@@ -19,36 +19,35 @@ import util.log.LogLevels;
 import java.io.IOException;
 
 /**
- * Up until now we built deterministic workflows:
- * - sequential, parallel, conditional, loop, and compositions of those.
- * You can also build a Supervisor agentic system, in which an agent will
- * decide dynamically which of his sub-agents to call in which order.
- * In this example, the Supervisor coordinates the hiring workflow:
- * He is supposed to runs HR/Manager/Team reviews and either schedule
- * an interview or send a rejection email.
- * Just like part 2 of the Composed Workflow example, but now 'self-organised'
- * Note that supervisor super-agents can be used in composed workflows just like the other super-agent types.
- * IMPORTANT: this example takes about 50s to run with GPT-4o-mini. You can see what is happening continuously in the PRETTY logs.
- * There are ways to speed up execution, see comments at the end of this file.
+ * 至此我们构建的都是"确定性工作流"：
+ * - 顺序、并行、条件、循环，以及它们的组合。
+ * 你还可以构建"监督者式（Supervisor）智能体系统"：由一个 Agent 动态决定
+ * 接下来该调用哪些子 Agent、以什么顺序调用。
+ * 在本示例中，监督者负责调度整个招聘流程：运行 HR/经理/团队评审，
+ * 然后要么安排面试，要么发送拒绝邮件。
+ * 这相当于"组合工作流"示例的第 2 部分，但这次是"自组织"完成的。
+ * 注意：监督者这类超级 Agent 也可以像其它超级 Agent 一样被用在组合工作流中。
+ * 重要：本示例用 GPT-4o-mini 运行约需 50 秒，PRETTY 日志会持续显示当前进展。
+ * 关于如何加速执行，见本文件结尾的注释。
  */
 public class _7a_Supervisor_Orchestration {
 
     static {
-        CustomLogging.setLevel(LogLevels.PRETTY, 200);  // control how much you see from the model calls
+        CustomLogging.setLevel(LogLevels.PRETTY, 200);  // 控制从模型调用中可见的信息量
     }
 
     private static final ChatModel CHAT_MODEL = ChatModelProvider.createChatModel();
 
     public static void main(String[] args) throws IOException {
 
-        // 1. Define all sub-agents
+        // 1. 定义所有子 Agent
         HrCvReviewer hrReviewer = AgenticServices.agentBuilder(HrCvReviewer.class)
                 .chatModel(CHAT_MODEL)
                 .outputKey("hrReview")
                 .build();
-        // importantly, if we use the same method names for multiple agents
-        // (in this case: 'reviewCv' for all reviewers) we best name our agents, like this:
-        // @Agent(name = "managerReviewer", description = "Reviews a CV based on a job description, gives feedback and a score")
+        // 重要：如果多个 Agent 使用相同的方法名（这里所有评审者都叫 'reviewCv'），
+        // 最好给每个 Agent 起一个明确的名字，例如：
+        // @Agent(name = "managerReviewer", description = "根据职位描述评审一份简历，给出反馈和打分")
 
         ManagerCvReviewer managerReviewer = AgenticServices.agentBuilder(ManagerCvReviewer.class)
                 .chatModel(CHAT_MODEL)
@@ -70,59 +69,62 @@ public class _7a_Supervisor_Orchestration {
                 .tools(new OrganizingTools())
                 .build();
 
-        // 2. Build the Supervisor agent
+        // 2. 构建监督者 Agent
         SupervisorAgent hiringSupervisor = AgenticServices.supervisorBuilder()
                 .chatModel(CHAT_MODEL)
                 .subAgents(hrReviewer, managerReviewer, teamReviewer, interviewOrganizer, emailAssistant)
+                // 上下文生成策略：保留聊天记忆并做摘要（让监督者了解子 Agent 都做了什么）
                 .contextGenerationStrategy(SupervisorContextStrategy.CHAT_MEMORY_AND_SUMMARIZATION)
-                .responseStrategy(SupervisorResponseStrategy.SUMMARY) // we want a summary of what happened, rather than retrieving a response
-                .supervisorContext("Always use the full panel of available reviewers. Always answer in English. When invoking agent, use pure JSON (no backticks, and new lines as backslash+n).") // optional context for the supervisor on how to behave
+                // 响应策略：我们希望得到"发生了什么"的摘要，而不是直接回传某个子 Agent 的结果
+                .responseStrategy(SupervisorResponseStrategy.SUMMARY)
+                // 给监督者的可选"行为上下文"提示，指导它如何行事（这是发给 LLM 的指令）
+                .supervisorContext("务必使用我们提供的全部评审小组。务必用英语回答。调用 Agent 时使用纯 JSON（不要反引号，换行用反斜杠+n 表示）。")
                 .build();
-        // Important to know: the supervisor will invoke 1 agent at a time and then review his plan to choose which agent to invoke next
-        // It is not possible to have agents executed in parallel by the supervisor
-        // If agents are marked as async, the supervisor will override that (no async execution) and issue a warning
+        // 关键点：监督者一次只调用 1 个 Agent，调用后会重新审视自己的计划，再决定下一个调用谁。
+        // 监督者无法让多个 Agent 并行执行。
+        // 如果某个 Agent 被标记为异步，监督者会强制改为同步（不并发）并给出警告。
 
-        // 3. Load candidate CV & job description
+        // 3. 加载候选人简历与职位描述
         String jobDescription = StringLoader.loadFromResource("/documents/job_description_backend.txt");
         String candidateCv = StringLoader.loadFromResource("/documents/tailored_cv.txt");
         String candidateContact = StringLoader.loadFromResource("/documents/candidate_contact.txt");
         String hrRequirements = StringLoader.loadFromResource("/documents/hr_requirements.txt");
         String phoneInterviewNotes = StringLoader.loadFromResource("/documents/phone_interview_notes.txt");
 
-        // start a timer
+        // 启动计时器
         long start = System.nanoTime();
-        // 4. Invoke Supervisor with a natural request
+        // 4. 用一句自然语言请求调用监督者
         String result = (String) hiringSupervisor.invoke(
-                "Evaluate the following candidate:\n" +
-                        "Candidate CV:\n" + candidateCv + "\n\n" +
-                        "Candidate Contacts:\n" + candidateContact + "\n\n" +
-                        "Job Description:\n" + jobDescription + "\n\n" +
-                        "HR Requirements:\n" + hrRequirements + "\n\n" +
-                        "Phone Interview Notes:\n" + phoneInterviewNotes
+                "请评估下面的候选人：\n" +
+                        "候选人简历：\n" + candidateCv + "\n\n" +
+                        "候选人联系方式：\n" + candidateContact + "\n\n" +
+                        "职位描述：\n" + jobDescription + "\n\n" +
+                        "HR 要求：\n" + hrRequirements + "\n\n" +
+                        "电话面试记录：\n" + phoneInterviewNotes
         );
         long end = System.nanoTime();
         double elapsedSeconds = (end - start) / 1_000_000_000.0;
-        // in the logs you'll notice a final invocation of agent 'done', this is how the supervisor finishes the invocation series
+        // 在日志里你会看到最后一次调用了名为 'done' 的 Agent，这就是监督者结束一次调用序列的方式
 
-        System.out.println("=== SUPERVISOR RUN COMPLETED in " + elapsedSeconds + " seconds ===");
+        System.out.println("=== 监督者运行完成，用时 " + elapsedSeconds + " 秒 ===");
         System.out.println(result);
     }
 
-    // ADVANCED USE CASES:
-    // See _7b_Supervisor_Orchestration_Advanced.java for
-    // - typed supervisor,
-    // - context engineering,
-    // - output strategies,
-    // - call chain observation,
+    // 进阶用法：
+    // 参见 _7b_Supervisor_Orchestration_Advanced.java，其中包含：
+    // - 类型化监督者（typed supervisor）
+    // - 上下文工程（context engineering）
+    // - 输出策略（output strategies）
+    // - 调用链观察（call chain observation）
 
-    // ON LATENCY:
-    // The whole run of this flow typically takes over 60s.
-    // A solution for this is to use a fast inference provider like CEREBRAS,
-    // which will run the whole flow in 10s but makes more mistakes.
-    // To try this example with CEREBRAS, get a key (click get started with free API key)
+    // 关于延迟：
+    // 整个流程通常要 60 秒以上。
+    // 一种解决方案是使用像 CEREBRAS 这样的快速推理提供商，
+    // 它能在 10 秒内跑完整个流程，但会更容易出错。
+    // 想用 CEREBRAS 体验本示例：去获取 key（点击 get started 领取免费 API key）
     // https://inference-docs.cerebras.ai/quickstart
-    // and save in env variables as "CEREBRAS_API_KEY"
-    // Then change line 38 to:
+    // 并保存到环境变量 "CEREBRAS_API_KEY"
+    // 然后把第 38 行改为：
     // private static final ChatModel CHAT_MODEL = ChatModelProvider.createChatModel("CEREBRAS");
 
 }

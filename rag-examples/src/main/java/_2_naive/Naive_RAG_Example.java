@@ -29,105 +29,106 @@ import static shared.Utils.*;
 public class Naive_RAG_Example {
 
     /**
-     * This example demonstrates how to implement a naive Retrieval-Augmented Generation (RAG) application.
-     * By "naive", we mean that we won't use any advanced RAG techniques.
-     * In each interaction with the Large Language Model (LLM), we will:
-     * 1. Take the user's query as-is.
-     * 2. Embed it using an embedding model.
-     * 3. Use the query's embedding to search an embedding store (containing small segments of your documents)
-     * for the X most relevant segments.
-     * 4. Append the found segments to the user's query.
-     * 5. Send the combined input (user query + segments) to the LLM.
-     * 6. Hope that:
-     * - The user's query is well-formulated and contains all necessary details for retrieval.
-     * - The found segments are relevant to the user's query.
+     * 这个示例演示了如何实现一个"朴素 RAG"（Retrieval-Augmented Generation，检索增强生成）应用。
+     * 这里的"朴素"意味着我们不会使用任何高级的 RAG 技巧。
+     * 在每次与 LLM（大语言模型）的交互中，我们会：
+     * 1. 直接采用用户的查询，不做任何加工。
+     * 2. 使用嵌入模型（Embedding Model）把查询向量化。
+     * 3. 用查询的向量在向量存储中检索（存储中保存着你文档的各个小片段），
+     *    找出与查询最相关的 X 个片段。
+     * 4. 把找到的片段拼接到用户的查询后面。
+     * 5. 把拼接后的输入（用户查询 + 相关片段）一起发送给 LLM。
+     * 6. 并期待：
+     *    - 用户的查询表述良好，包含了检索所需的全部信息。
+     *    - 找到的片段确实与用户的查询相关。
      */
 
     public static void main(String[] args) {
 
-        // Let's create an assistant that will know about our document
+        // 创建一个"知道"我们文档内容的助手（AI Service）。
+        // 这里加载的是虚构租车公司 "Miles of Smiles" 的使用条款文档。
         Assistant assistant = createAssistant("documents/miles-of-smiles-terms-of-use.txt");
 
-        // Now, let's start the conversation with the assistant. We can ask questions like:
-        // - Can I cancel my reservation?
-        // - I had an accident, should I pay extra?
+        // 现在开始与助手对话，可以像下面这样提问：
+        // - 我可以取消预订吗？
+        // - 我出了事故，需要额外付费吗？
         startConversationWith(assistant);
     }
 
     private static Assistant createAssistant(String documentPath) {
 
-        // First, let's create a chat model, also known as a LLM, which will answer our queries.
-        // In this example, we will use OpenAI's gpt-4o-mini, but you can choose any supported model.
-        // Langchain4j currently supports more than 10 popular LLM providers.
+        // 第一步：创建一个聊天模型，也就是 LLM，由它来回答我们的问题。
+        // 本例使用 OpenAI 的 gpt-4o-mini，你也可以选择其他受支持的模型。
+        // LangChain4j 目前支持 10 多个主流 LLM 提供商。
         ChatModel chatModel = OpenAiChatModel.builder()
                 .apiKey(OPENAI_API_KEY)
                 .modelName(GPT_4_O_MINI)
                 .build();
 
 
-        // Now, let's load a document that we want to use for RAG.
-        // We will use the terms of use from an imaginary car rental company, "Miles of Smiles".
-        // For this example, we'll import only a single document, but you can load as many as you need.
-        // LangChain4j offers built-in support for loading documents from various sources:
-        // File System, URL, Amazon S3, Azure Blob Storage, GitHub, Tencent COS.
-        // Additionally, LangChain4j supports parsing multiple document types:
-        // text, pdf, doc, xls, ppt.
-        // However, you can also manually import your data from other sources.
+        // 接下来，加载一个我们想要用于 RAG 的文档。
+        // 我们使用虚构的租车公司 "Miles of Smiles" 的使用条款。
+        // 本例只导入了一个文档，但实际上你可以加载任意多个。
+        // LangChain4j 内置支持从多种来源加载文档：
+        // 文件系统、URL、Amazon S3、Azure Blob Storage、GitHub、腾讯云 COS。
+        // 另外，LangChain4j 还支持解析多种文档类型：文本、PDF、Word、Excel、PPT。
+        // 当然，你也可以从其他来源手动导入数据。
         DocumentParser documentParser = new TextDocumentParser();
         Document document = loadDocument(toPath(documentPath), documentParser);
 
 
-        // Now, we need to split this document into smaller segments, also known as "chunks."
-        // This approach allows us to send only relevant segments to the LLM in response to a user query,
-        // rather than the entire document. For instance, if a user asks about cancellation policies,
-        // we will identify and send only those segments related to cancellation.
-        // A good starting point is to use a recursive document splitter that initially attempts
-        // to split by paragraphs. If a paragraph is too large to fit into a single segment,
-        // the splitter will recursively divide it by newlines, then by sentences, and finally by words,
-        // if necessary, to ensure each piece of text fits into a single segment.
+        // 现在我们需要把文档切分成更小的片段，也叫"块"（chunk）。
+        // 这样做的目的是：面对用户问题时，只把相关的片段发送给 LLM，
+        // 而不必把整篇文档都发给它。例如，如果用户询问取消预订的政策，
+        // 我们就只找出并发送与取消相关的那些片段。
+        // 一个好的起点是使用"递归"文档切分器：它首先尝试按段落切分；
+        // 如果某个段落太大、无法装进一个片段，就递归地先按换行符切，
+        // 再按句子切，最后（如有必要）按单词切，确保每一块文本都能放进一个片段。
+        // 这里每块最多 300 个 token，相邻块之间重叠 0 个 token。
         DocumentSplitter splitter = DocumentSplitters.recursive(300, 0);
         List<TextSegment> segments = splitter.split(document);
 
 
-        // Now, we need to embed (also known as "vectorize") these segments.
-        // Embedding is needed for performing similarity searches.
-        // For this example, we'll use a local in-process embedding model, but you can choose any supported model.
-        // Langchain4j currently supports more than 10 popular embedding model providers.
+        // 现在我们需要把这些片段"嵌入"（embed，也叫"向量化"）。
+        // 向量化是做相似度检索的前提——把文本转成能表示语义的数值向量。
+        // 本例使用一个本地的进程内嵌入模型，你也可以选择其他任何受支持的模型。
+        // LangChain4j 目前支持 10 多个流行的嵌入模型提供商。
         EmbeddingModel embeddingModel = new BgeSmallEnV15QuantizedEmbeddingModel();
         List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
 
 
-        // Next, we will store these embeddings in an embedding store (also known as a "vector database").
-        // This store will be used to search for relevant segments during each interaction with the LLM.
-        // For simplicity, this example uses an in-memory embedding store, but you can choose from any supported store.
-        // Langchain4j currently supports more than 15 popular embedding stores.
+        // 接着，我们把向量存进向量存储（也叫"向量数据库"）。
+        // 在每次与 LLM 交互时，都会用这个存储来检索相关片段。
+        // 为简单起见，本例使用内存型向量存储，你也可以选择任何受支持的存储。
+        // LangChain4j 目前支持 15 多个流行的向量存储。
         EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
         embeddingStore.addAll(embeddings, segments);
 
-        // We could also use EmbeddingStoreIngestor to hide manual steps above behind a simpler API.
-        // See an example of using EmbeddingStoreIngestor in _01_Advanced_RAG_with_Query_Compression_Example.
+        // 我们也可以使用 EmbeddingStoreIngestor 来把上面的手工步骤
+        // （切分、向量化、入库）隐藏在一个更简单的 API 后面。
+        // 关于 EmbeddingStoreIngestor 的用法，见 _01_Advanced_RAG_with_Query_Compression_Example。
 
 
-        // The content retriever is responsible for retrieving relevant content based on a user query.
-        // Currently, it is capable of retrieving text segments, but future enhancements will include support for
-        // additional modalities like images, audio, and more.
+        // 内容检索器（ContentRetriever）负责根据用户查询检索相关内容。
+        // 目前它能够检索文本片段，未来还会扩展支持图像、音频等多模态内容。
         ContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
                 .embeddingStore(embeddingStore)
                 .embeddingModel(embeddingModel)
-                .maxResults(2) // on each interaction we will retrieve the 2 most relevant segments
-                .minScore(0.5) // we want to retrieve segments at least somewhat similar to user query
+                .maxResults(2) // 每次交互只检索最相关的 2 个片段
+                .minScore(0.5) // 只检索与用户查询有一定相似度（得分 >= 0.5）的片段
                 .build();
 
 
-        // Optionally, we can use a chat memory, enabling back-and-forth conversation with the LLM
-        // and allowing it to remember previous interactions.
-        // Currently, LangChain4j offers two chat memory implementations:
-        // MessageWindowChatMemory and TokenWindowChatMemory.
+        // （可选）我们可以使用聊天记忆（chat memory），
+        // 这样就能与 LLM 进行多轮对话，让它记住之前的交互内容。
+        // 目前 LangChain4j 提供两种聊天记忆实现：
+        // MessageWindowChatMemory（按消息条数）和 TokenWindowChatMemory（按 token 数量）。
+        // 这里设置最多记住 10 条消息。
         ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(10);
 
 
-        // The final step is to build our AI Service,
-        // configuring it to use the components we've created above.
+        // 最后一步：构建我们的 AI Service，
+        // 把上面创建好的各个组件（聊天模型、检索器、聊天记忆）配置进去。
         return AiServices.builder(Assistant.class)
                 .chatModel(chatModel)
                 .contentRetriever(contentRetriever)

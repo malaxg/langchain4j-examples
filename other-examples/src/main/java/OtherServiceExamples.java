@@ -15,68 +15,98 @@ import java.util.function.Function;
 import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_O_MINI;
 import static java.util.Arrays.asList;
 
+/**
+ * 一组"AI 服务"（AI Services）高级用法的综合示例集合。
+ * <p>
+ * 通过 {@link AiServices} 把接口方法自动映射为对 LLM 的调用，
+ * 演示如何让模型返回枚举、数字、日期、POJO 等结构化结果，
+ * 以及如何配置 {@code @SystemMessage} / {@code @UserMessage} /
+ * {@code @UserName} 等注解。每个内部类都是一个独立可运行的示例。
+ */
 public class OtherServiceExamples {
 
+    // 供各示例共享的 OpenAI 聊天模型实例
     static ChatModel chatModel = OpenAiChatModel.builder()
-            .apiKey(ApiKeys.OPENAI_API_KEY)
-            .modelName(GPT_4_O_MINI)
+            .apiKey(ApiKeys.OPENAI_API_KEY) // 配置 API Key
+            .modelName(GPT_4_O_MINI)        // 指定模型名称
             .build();
 
+    /**
+     * 示例：让 AI 服务返回枚举（情感分析）。
+     * <p>
+     * 演示 AI Services 自动把 LLM 的输出字符串转换为枚举类型，
+     * 也演示了返回布尔值的用法。
+     */
     static class Sentiment_Extracting_AI_Service_Example {
 
+        // 情感类别枚举
         enum Sentiment {
-            POSITIVE, NEUTRAL, NEGATIVE;
+            POSITIVE, NEUTRAL, NEGATIVE; // 正面、中性、负面
         }
 
+        // 定义 AI 服务接口：方法签名决定了模型输出的类型/格式
         interface SentimentAnalyzer {
 
-            @UserMessage("Analyze sentiment of {{it}}")
+            // @UserMessage 指定发送给 LLM 的用户消息模板，{{it}} 代表方法入参 text
+            @UserMessage("分析 {{it}} 的情感倾向")
+            // 返回类型是枚举，LangChain4j 会让模型输出对应的枚举值
             Sentiment analyzeSentimentOf(String text);
 
-            @UserMessage("Does {{it}} have a positive sentiment?")
+            @UserMessage("{{it}} 是否带有正面情感？")
+            // 返回类型是 boolean，模型只需回答 yes/no
             boolean isPositive(String text);
         }
 
         public static void main(String[] args) {
 
+            // 使用 AiServices.create 根据接口自动生成代理对象
             SentimentAnalyzer sentimentAnalyzer = AiServices.create(SentimentAnalyzer.class, chatModel);
 
+            // 接口方法返回枚举，模型会根据消息输出 POSITIVE / NEUTRAL / NEGATIVE
             Sentiment sentiment = sentimentAnalyzer.analyzeSentimentOf("It is good!");
-            System.out.println(sentiment); // POSITIVE
+            System.out.println(sentiment); // POSITIVE（正面）
 
             boolean positive = sentimentAnalyzer.isPositive("It is bad!");
-            System.out.println(positive); // false
+            System.out.println(positive); // false（不是正面）
         }
     }
 
 
+    /**
+     * 示例：让 AI 服务从文本中提取数字，并转换为各种数值类型。
+     * <p>
+     * 同样的文本，只要把接口方法的返回类型改成 int / long / BigInteger /
+     * float / double / BigDecimal，LangChain4j 就会自动把模型输出转换成对应类型。
+     */
     static class Number_Extracting_AI_Service_Example {
 
+        // 定义 AI 服务接口，方法返回类型决定数字被转换成的 Java 类型
         interface NumberExtractor {
 
-            @UserMessage("Extract number from {{it}}")
-            int extractInt(String text);
+            @UserMessage("从 {{it}} 中提取数字")
+            int extractInt(String text); // 返回 int
 
-            @UserMessage("Extract number from {{it}}")
-            long extractLong(String text);
+            @UserMessage("从 {{it}} 中提取数字")
+            long extractLong(String text); // 返回 long
 
-            @UserMessage("Extract number from {{it}}")
-            BigInteger extractBigInteger(String text);
+            @UserMessage("从 {{it}} 中提取数字")
+            BigInteger extractBigInteger(String text); // 返回 BigInteger
 
-            @UserMessage("Extract number from {{it}}")
-            float extractFloat(String text);
+            @UserMessage("从 {{it}} 中提取数字")
+            float extractFloat(String text); // 返回 float
 
-            @UserMessage("Extract number from {{it}}")
-            double extractDouble(String text);
+            @UserMessage("从 {{it}} 中提取数字")
+            double extractDouble(String text); // 返回 double
 
-            @UserMessage("Extract number from {{it}}")
-            BigDecimal extractBigDecimal(String text);
+            @UserMessage("从 {{it}} 中提取数字")
+            BigDecimal extractBigDecimal(String text); // 返回 BigDecimal
         }
 
         public static void main(String[] args) {
 
             NumberExtractor extractor = AiServices.create(NumberExtractor.class, chatModel);
 
+            // 一段英文文本，其中隐藏着答案"42"
             String text = "After countless millennia of computation, the supercomputer Deep Thought finally announced " +
                     "that the answer to the ultimate question of life, the universe, and everything was forty two.";
 
@@ -101,24 +131,32 @@ public class OtherServiceExamples {
     }
 
 
+    /**
+     * 示例：让 AI 服务从文本中提取日期和时间，并转换为 Java 的日期时间类型。
+     * <p>
+     * 根据返回类型 {@link LocalDate} / {@link LocalTime} / {@link LocalDateTime}，
+     * LangChain4j 会生成对应的日期时间对象。
+     */
     static class Date_and_Time_Extracting_AI_Service_Example {
 
+        // 定义 AI 服务接口，方法返回类型决定提取的日期时间类型
         interface DateTimeExtractor {
 
-            @UserMessage("Extract date from {{it}}")
-            LocalDate extractDateFrom(String text);
+            @UserMessage("从 {{it}} 中提取日期")
+            LocalDate extractDateFrom(String text); // 只提取日期部分
 
-            @UserMessage("Extract time from {{it}}")
-            LocalTime extractTimeFrom(String text);
+            @UserMessage("从 {{it}} 中提取时间")
+            LocalTime extractTimeFrom(String text); // 只提取时间部分
 
-            @UserMessage("Extract date and time from {{it}}")
-            LocalDateTime extractDateTimeFrom(String text);
+            @UserMessage("从 {{it}} 中提取日期和时间")
+            LocalDateTime extractDateTimeFrom(String text); // 同时提取日期和时间
         }
 
         public static void main(String[] args) {
 
             DateTimeExtractor extractor = AiServices.create(DateTimeExtractor.class, chatModel);
 
+            // 一段英文文本，里面隐含着日期 1968-07-04 和 23:45 这两个时间信息
             String text = "The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight," +
                     " following the celebrations of Independence Day.";
 
@@ -134,12 +172,20 @@ public class OtherServiceExamples {
     }
 
 
+    /**
+     * 示例：让 AI 服务把文本解析成一个自定义的 POJO 对象（Person）。
+     * <p>
+     * 结合"json_schema / strictJsonSchema"严格 JSON 模式，让模型强制输出合法 JSON，
+     * 再由 LangChain4j 反序列化成 Java 对象，可显著提升结构化抽取的可靠性。
+     */
     static class POJO_Extracting_AI_Service_Example {
 
+        // 需要被填写的 POJO 类
         static class Person {
 
-            @Description("first name of a person")
-            // you can add an optional description to help an LLM have a better understanding
+            // @Description 是可选的字段描述，帮助 LLM 更准确地理解每个字段的含义
+            @Description("first name of a person") // 此为发送给 LLM 的描述文本，需保留英文以利于模型理解
+            // 你也可以添加可选描述，帮助 LLM 更好地理解某个字段
             private String firstName;
             private String lastName;
             private LocalDate birthDate;
@@ -154,29 +200,32 @@ public class OtherServiceExamples {
             }
         }
 
+        // 定义 AI 服务接口，返回类型是 Person
         interface PersonExtractor {
 
-            @UserMessage("Extract a person from the following text: {{it}}")
+            @UserMessage("从以下文本中提取一个人物信息: {{it}}")
             Person extractPersonFrom(String text);
         }
 
         public static void main(String[] args) {
 
+            // 单独创建一个 ChatModel（这里开启了 JSON 严格模式）
             ChatModel chatModel = OpenAiChatModel.builder()
                     .apiKey(ApiKeys.OPENAI_API_KEY)
                     .modelName(GPT_4_O_MINI)
-                    // When extracting POJOs with the LLM that supports the "json mode" feature
-                    // (e.g., OpenAI, Azure OpenAI, Vertex AI Gemini, Ollama, etc.),
-                    // it is advisable to enable it (json mode) to get more reliable results.
-                    // When using this feature, LLM will be forced to output a valid JSON.
-                    .responseFormat("json_schema")
-                    .strictJsonSchema(true) // https://docs.langchain4j.dev/integrations/language-models/open-ai#structured-outputs-for-json-mode
-                    .logRequests(true)
-                    .logResponses(true)
+                    // 当抽取 POJO、且使用的 LLM 支持"json mode"特性时
+                    // （例如 OpenAI、Azure OpenAI、Vertex AI Gemini、Ollama 等），
+                    // 建议开启 json mode 以获得更可靠的结果。
+                    // 开启该特性后，LLM 会被强制输出合法的 JSON。
+                    .responseFormat("json_schema") // 指定响应格式为 JSON Schema
+                    .strictJsonSchema(true) // 开启严格 JSON Schema 校验。参考：https://docs.langchain4j.dev/integrations/language-models/open-ai#structured-outputs-for-json-mode
+                    .logRequests(true)  // 打印请求日志，便于调试
+                    .logResponses(true) // 打印响应日志，便于调试
                     .build();
 
             PersonExtractor extractor = AiServices.create(PersonExtractor.class, chatModel);
 
+            // 一段描述人物信息的英文文本，从中要提取出 John Doe 与其出生日期
             String text = "In 1968, amidst the fading echoes of Independence Day, "
                     + "a child named John arrived under the calm evening sky. "
                     + "This newborn, bearing the surname Doe, marked the start of a new journey.";
@@ -189,17 +238,24 @@ public class OtherServiceExamples {
     }
 
 
+    /**
+     * 示例：让 AI 服务把文本解析成带字段描述的 POJO（Recipe 菜谱），
+     * 并通过 {@code @StructuredPrompt} 结构化的 prompt 对象来生成提示词。
+     * <p>
+     * 展示了两种调用方式：直接用可变参数传配料，或传入装配好的 prompt 对象。
+     */
     static class POJO_With_Descriptions_Extracting_AI_Service_Example {
 
+        // 菜谱 POJO，每个字段的 @Description 都用于指导 LLM 生成内容
         static class Recipe {
 
-            @Description("short title, 3 words maximum")
+            @Description("short title, 3 words maximum") // 发送给 LLM：短标题，最多 3 个单词
             private String title;
 
-            @Description("short description, 2 sentences maximum")
+            @Description("short description, 2 sentences maximum") // 发送给 LLM：简短描述，最多 2 句话
             private String description;
 
-            @Description("each step should be described in 4 words, steps should rhyme")
+            @Description("each step should be described in 4 words, steps should rhyme") // 发送给 LLM：每步 4 个单词且需押韵
             private List<String> steps;
 
             private Integer preparationTimeMinutes;
@@ -215,17 +271,22 @@ public class OtherServiceExamples {
             }
         }
 
+        // @StructuredPrompt 用模板定义结构化提示词，{{dish}} 和 {{ingredients}} 是占位符
+        // （由对象的属性自动填充）
         @StructuredPrompt("Create a recipe of a {{dish}} that can be prepared using only {{ingredients}}")
         static class CreateRecipePrompt {
 
-            private String dish;
-            private List<String> ingredients;
+            private String dish;              // 菜名（对应 {{dish}}）
+            private List<String> ingredients; // 可用配料（对应 {{ingredients}}）
         }
 
+        // Chef 接口：返回类型 Recipe 告诉模型需要输出结构化的菜谱
         interface Chef {
 
+            // 方式一：直接用可变参数传入配料
             Recipe createRecipeFrom(String... ingredients);
 
+            // 方式二：传入装配好的结构化 prompt 对象
             Recipe createRecipe(CreateRecipePrompt prompt);
         }
 
@@ -234,49 +295,58 @@ public class OtherServiceExamples {
             ChatModel chatModel = OpenAiChatModel.builder()
                     .apiKey(ApiKeys.OPENAI_API_KEY)
                     .modelName(GPT_4_O_MINI)
-                    // When extracting POJOs with the LLM that supports the "json mode" feature
-                    // (e.g., OpenAI, Azure OpenAI, Vertex AI Gemini, Ollama, etc.),
-                    // it is advisable to enable it (json mode) to get more reliable results.
-                    // When using this feature, LLM will be forced to output a valid JSON.
-                    .responseFormat("json_schema")
-                    .strictJsonSchema(true) // https://docs.langchain4j.dev/integrations/language-models/open-ai#structured-outputs-for-json-mode
-                    .logRequests(true)
-                    .logResponses(true)
+                    // 当抽取 POJO、且使用的 LLM 支持"json mode"特性时
+                    // （例如 OpenAI、Azure OpenAI、Vertex AI Gemini、Ollama 等），
+                    // 建议开启 json mode 以获得更可靠的结果。
+                    // 开启该特性后，LLM 会被强制输出合法的 JSON。
+                    .responseFormat("json_schema") // 指定响应格式为 JSON Schema
+                    .strictJsonSchema(true) // 严格 JSON Schema。参考：https://docs.langchain4j.dev/integrations/language-models/open-ai#structured-outputs-for-json-mode
+                    .logRequests(true)  // 打印请求日志
+                    .logResponses(true) // 打印响应日志
                     .build();
 
             Chef chef = AiServices.create(Chef.class, chatModel);
 
+            // 方式一调用：传入若干配料，模型生成对应菜谱
             Recipe recipe = chef.createRecipeFrom("cucumber", "tomato", "feta", "onion", "olives");
 
             System.out.println(recipe);
+            // 可能的输出（模型输出内容不固定）：
             // Recipe {
-            //     title = "Greek Salad",
-            //     description = "A refreshing mix of veggies and feta cheese in a zesty dressing.",
+            //     title = "希腊沙拉",
+            //     description = "由蔬菜和羊奶酪搭配油醋汁调制的清爽沙拉。",
             //     steps = [
-            //         "Chop cucumber and tomato",
-            //         "Add onion and olives",
-            //         "Crumble feta on top",
-            //         "Drizzle with dressing and enjoy!"
+            //         "切黄瓜和番茄",
+            //         "加入洋葱和橄榄",
+            //         "撒上羊奶酪",
+            //         "淋上酱汁享用!"
             //     ],
             //     preparationTimeMinutes = 10
             // }
 
 
+            // 方式二调用：先构造结构化 prompt 对象再调用
             CreateRecipePrompt prompt = new CreateRecipePrompt();
             prompt.dish = "salad";
             prompt.ingredients = asList("cucumber", "tomato", "feta", "onion", "olives");
 
             Recipe anotherRecipe = chef.createRecipe(prompt);
             System.out.println(anotherRecipe);
-            // Recipe ...
+            // 输出的菜谱结构同上方 ...
         }
     }
 
 
+    /**
+     * 示例：在 AI 服务接口中使用 {@code @SystemMessage} 设置系统提示词。
+     * <p>
+     * 系统消息用来设定 LLM 的角色和行为准则，在每次对话前自动注入。
+     */
     static class AI_Service_with_System_Message_Example {
 
         interface Chef {
 
+            // @SystemMessage 指定系统提示词，设定 LLM 扮演一个专业的、友好礼貌且简洁的厨师
             @SystemMessage("You are a professional chef. You are friendly, polite and concise.")
             String answer(String question);
         }
@@ -286,19 +356,29 @@ public class OtherServiceExamples {
             Chef chef = AiServices.create(Chef.class, chatModel);
 
             String answer = chef.answer("How long should I grill chicken?");
-            System.out.println(answer); // Grilling chicken usually takes around 10-15 minutes per side, depending on ...
+            System.out.println(answer); // 烤鸡肉通常每面需要大约 10-15 分钟，具体取决于 ...
         }
     }
 
 
+    /**
+     * 示例：在 AI 服务接口中同时使用 {@code @SystemMessage} 和 {@code @UserMessage}，
+     * 并利用 {@code @V} 把方法参数绑定到消息模板中的变量。
+     * <p>
+     * 也演示了返回 {@code List<String>}（例如把总结内容拆成多行）的用法。
+     */
     static class AI_Service_with_System_and_User_Messages_Example {
 
         interface TextUtils {
 
+            // @V 用于把方法参数绑定到模板变量：
+            // text 绑定到 {{text}}，language 绑定到 {{language}}
             @SystemMessage("You are a professional translator into {{language}}")
             @UserMessage("Translate the following text: {{text}}")
             String translate(@V("text") String text, @V("language") String language);
 
+            // 返回 List<String>：让模型用 {{n}} 条要点总结每条用户消息，仅输出要点即可
+            // @UserMessage 直接修饰参数，表示该参数就是用户消息本体
             @SystemMessage("Summarize every message from user in {{n}} bullet points. Provide only bullet points.")
             List<String> summarize(@UserMessage String text, @V("n") int n);
         }
@@ -307,29 +387,39 @@ public class OtherServiceExamples {
 
             TextUtils utils = AiServices.create(TextUtils.class, chatModel);
 
+            // 把"你好，最近怎么样?"翻译成意大利语
             String translation = utils.translate("Hello, how are you?", "italian");
             System.out.println(translation); // Ciao, come stai?
 
 
+            // 一段要总结为要点的英文文本
             String text = "AI, or artificial intelligence, is a branch of computer science that aims to create " +
                     "machines that mimic human intelligence. This can range from simple tasks such as recognizing " +
                     "patterns or speech to more complex tasks like making decisions or predictions.";
 
+            // 用 3 条要点总结上文
             List<String> bulletPoints = utils.summarize(text, 3);
             System.out.println(bulletPoints);
             // [
-            //     "- AI is a branch of computer science",
-            //     "- It aims to create machines that mimic human intelligence",
-            //     "- It can perform simple or complex tasks"
+            //     "- AI 是计算机科学的一个分支",
+            //     "- 它的目标是创造模仿人类智能的机器",
+            //     "- 它可以执行简单或复杂的任务"
             // ]
         }
     }
 
 
+    /**
+     * 示例：把系统消息和用户消息的模板放到外部资源文件中，再通过
+     * {@code @SystemMessage(fromResource = ...)} / {@code @UserMessage(fromResource = ...)} 加载。
+     * <p>
+     * 模板文件位于 classpath 的 resources 目录下，便于集中管理和修改。
+     */
     static class AI_Service_with_System_and_User_Messages_loaded_from_resources_Example {
 
         interface TextUtils {
 
+            // 从 resources 中加载系统/用户消息模板
             @SystemMessage(fromResource = "/translator-system-prompt-template.txt")
             @UserMessage(fromResource = "/translator-user-prompt-template.txt")
             String translate(@V("text") String text, @V("language") String language);
@@ -345,10 +435,16 @@ public class OtherServiceExamples {
     }
 
 
+    /**
+     * 示例：在 AI 服务接口中使用 {@code @UserName} 注入用户名称。
+     * <p>
+     * 被 {@code @UserName} 修饰的参数会作为"用户名"传给模型，便于个性化回应。
+     */
     static class AI_Service_with_UserName_Example {
 
         interface Assistant {
 
+            // @UserName 参数表示用户名，@UserMessage 参数表示用户消息正文
             String chat(@UserName String name, @UserMessage String message);
         }
 
@@ -357,19 +453,27 @@ public class OtherServiceExamples {
             Assistant assistant = AiServices.create(Assistant.class, chatModel);
 
             String answer = assistant.chat("Klaus", "Hi, tell me my name if you see it.");
-            System.out.println(answer); // Hello! Your name is Klaus. How can I assist you today?
+            System.out.println(answer); // 你好！你的名字是 Klaus。今天需要我帮你做点什么吗？
         }
     }
 
+    /**
+     * 示例：根据 {@code @MemoryId} 动态提供系统消息。
+     * <p>
+     * 通过 systemMessageProvider 提供函数，可以根据 memoryId 返回不同的系统提示词，
+     * 从而在同一接口下为不同会话/用户定制角色设定。
+     */
     static class AI_Service_with_Dynamic_System_Message_Example {
 
         interface Assistant {
 
+            // @MemoryId 标记会话/用户标识，配合 systemMessageProvider 使用
             String chat(@MemoryId String memoryId, @UserMessage String userMessage);
         }
 
         public static void main(String[] args) {
 
+            // 根据 memoryId 返回不同的系统提示词：memoryId 为 1 时用户被称作"陛下"
             Function<Object, String> systemMessageProvider = (memoryId) -> {
                 if (memoryId.equals("1")) {
                     return "You are a helpful assistant. The user prefers to be called 'Your Majesty'.";
@@ -378,13 +482,14 @@ public class OtherServiceExamples {
                 }
             };
 
+            // 使用 AiServices.builder 手动装配：指定模型并配置动态系统消息提供者
             Assistant assistant = AiServices.builder(Assistant.class)
                     .chatModel(chatModel)
                     .systemMessageProvider(systemMessageProvider)
                     .build();
 
-            System.out.println(assistant.chat("1", "Hi")); // Hello, Your Majesty! How may I assist you today?
-            System.out.println(assistant.chat("2", "Hi")); // Hello! How can I assist you today?
+            System.out.println(assistant.chat("1", "Hi")); // 你好，陛下！今天有什么能为您效劳？
+            System.out.println(assistant.chat("2", "Hi")); // 你好！今天需要我帮你做点什么吗？
         }
     }
 }

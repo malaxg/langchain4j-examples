@@ -1,20 +1,25 @@
 package shared;
 
 /**
- * This is an "AI Service". It is a Java service with AI capabilities/features.
- * It can be integrated into your code like any other service, acting as a bean, and can be mocked for testing.
- * The goal is to seamlessly integrate AI functionality into your (existing) codebase with minimal friction.
- * It's conceptually similar to Spring Data JPA or Retrofit.
- * You define an interface and optionally customize it with annotations.
- * LangChain4j then provides an implementation for this interface using proxy and reflection.
- * This approach abstracts away all the complexity and boilerplate.
- * So you won't need to juggle the model, messages, memory, RAG components, tools, output parsers, etc.
- * However, don't worry. It's quite flexible and configurable, so you'll be able to tailor it
- * to your specific use case.
+ * 这是一个 "AI Service"（AI 服务）。它是一个具有 AI 能力的 Java 服务接口。
+ * 它可以像其他服务一样集成到你的代码中，可以作为 Spring 的 Bean 使用，也可以被 mock 用于测试。
+ * 目标是让你以最小的成本把 AI 功能无缝集成到现有代码中。
+ * 它的概念与 Spring Data JPA 或 Retrofit 类似：
+ * 你只需要定义一个接口，并（可选地）用注解来定制它。
+ * LangChain4j 会通过代理（proxy）和反射（reflection）为这个接口生成实现。
+ * 这种方式把所有的复杂性和样板代码都封装了起来，
+ * 你不需要再手动管理模型、消息、记忆、RAG 组件、工具、输出解析器等。
+ * 不过不用担心，它非常灵活和可配置，你可以根据具体需求来定制它。
  * <br>
- * More info here: https://docs.langchain4j.dev/tutorials/ai-services
+ * 更多信息请看：https://docs.langchain4j.dev/tutorials/ai-services
  */
 public interface Assistant {
 
+    /**
+     * 让 AI 助手回答一个问题。
+     *
+     * @param query 用户提出的问题
+     * @return 模型的回答文本
+     */
     String answer(String query);
 }
