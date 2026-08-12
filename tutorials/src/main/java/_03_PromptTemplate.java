@@ -38,11 +38,6 @@ public class _03_PromptTemplate {
         public static void main(String[] args) {
 
             // 构建聊天模型（打开日志开关便于观察）
-            ChatModel model = OpenAiChatModel.builder()
-                    .apiKey(ApiKeys.OPENAI_API_KEY)
-                    .modelName(GPT_4_O_MINI)
-                    .timeout(ofSeconds(60))
-                    .build();
 
             // 1. 定义提示词模板：{{dishType}} 和 {{ingredients}} 是待填充的占位符
             String template = "请为{{dishType}}创建一个菜谱，需要用到以下食材：{{ingredients}}";
@@ -57,7 +52,7 @@ public class _03_PromptTemplate {
             Prompt prompt = promptTemplate.apply(variables);
 
             // 4. 把渲染好的提示词文本发给模型，prompt.text() 取出纯文本内容
-            String response = model.chat(prompt.text());
+            String response = Model.MODEL.chat(prompt.text());
 
             // 5. 打印模型生成的菜谱
             System.out.println(response);

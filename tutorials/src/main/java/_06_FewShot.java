@@ -33,13 +33,6 @@ public class _06_FewShot {
      */
     public static void main(String[] args) {
 
-        // 构建流式聊天模型，并设置较长的超时时间（100 秒）
-        OpenAiStreamingChatModel model = OpenAiStreamingChatModel.builder()
-                .apiKey(ApiKeys.OPENAI_API_KEY)
-                .modelName(GPT_4_O_MINI)
-                .timeout(ofSeconds(100))
-                .build();
-
         // 创建一个消息列表，用来存放"少样本"示例（用户消息 + AI 示例回复成对出现）
         List<ChatMessage> fewShotHistory = new ArrayList<>();
 
@@ -82,7 +75,7 @@ public class _06_FewShot {
         CompletableFuture<ChatResponse> futureChatResponse = new CompletableFuture<>();
 
         // 把整个消息列表（含少样本示例 + 真实用户消息）发给模型
-        model.chat(fewShotHistory, new StreamingChatResponseHandler() {
+        Model.STREAM_MODULE.chat(fewShotHistory, new StreamingChatResponseHandler() {
 
             /**
              * 每生成一小段就打印出来（不换行，打字机效果）。

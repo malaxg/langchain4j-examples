@@ -12,6 +12,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_O_MINI;
 import static java.time.Duration.ofSeconds;
@@ -20,23 +23,45 @@ import static java.util.Arrays.asList;
 /**
  * 教程第 8 课：AI 服务（AI Service）——LangChain4j 最强大、最常用的功能之一。
  * <p>
- * AI Service 的思路是：你只需定义一个"接口"，接口里声明方法的参数和返回类型，
- * 再用 {@code AiServices.create()} 生成接口的实现，LangChain4j 就会自动：
- *  - 把方法参数拼进提示词发给 LLM；
- *  - 把 LLM 返回的文本自动解析成接口声明的返回类型（String、int、枚举、POJO、List 等）。
+ * 站在企业开发的角度，AiService 是 LangChain4j 诸多抽象中最"像工程产品"的一个。
+ * 它的本质是：用「声明式接口」把业务代码里的 AI 交互规范化、类型化、可测试化——
+ * 你不再手写 {@code model.chat("一堆拼好的提示词")} 再手工解析返回字符串，而是把
+ * 调用"伪装"成一个返回类型明确的普通 Java 方法，上层业务完全不感知背后是 LLM。
+ * <p>
+ * <b>一、核心能力（从下方示例提炼）</b>
+ * <ul>
+ *   <li><b>结构化输出</b>：LLM 返回的是文本，但业务系统要类型安全的数据。AiService
+ *       能把回答自动解析成枚举、int/long/BigDecimal、LocalDate/LocalTime、自定义 POJO、
+ *       List&lt;枚举&gt; 等，免除手写正则或脆弱的字符串解析。</li>
+ *   <li><b>提示词模板管理</b>：通过 @SystemMessage / @UserMessage + {{变量}} + @V 把
+ *       提示词管理起来，避免在业务代码里到处拼接字符串，也便于外置维护。</li>
+ *   <li><b>注入对话记忆</b>：AiServices.builder().chatMemory(...) 让 AI 记住多轮对话；
+ *       @MemoryId + chatMemoryProvider 实现多用户/多会话隔离。</li>
+ *   <li><b>声明式人设/行为</b>：@SystemMessage 为不同业务场景定义不同"角色"的 AI，
+ *       一个应用内可有多个 AiService 接口对应不同职能。</li>
+ * </ul>
+ * <p>
+ * <b>二、对企业开发的价值</b>
+ * <ul>
+ *   <li>可测试性：接口方法类型明确，可 mock 掉 AIService 做单元测试。</li>
+ *   <li>健壮性：类型解析、超时、异常统一处理，避免 LLM 输出不确定性污染业务层。</li>
+ *   <li>可维护性：业务逻辑与"提示词 / OAI 调用细节"解耦，提示词团队与开发团队各司其职。</li>
+ *   <li>成本/观测可控：可在 AiService 层统一加日志、限流、监控（结合后续的 Listener）。</li>
+ * </ul>
+ * <p>
+ * <b>一句话总结</b>：AiService 是 LangChain4j 给 Java 开发者提供的、把大模型封装成
+ * 「可声明、可注入、可测试的业务服务」的工程化层。企业里写 AI 功能应优先定义 AiService
+ * 接口（类型安全、带记忆、带提示词模板），而不是直接裸调 model.chat()。
  * <p>
  * 本文件包含大量独立示例（每个是一个 static class，各自带 main 方法）：
  * 简单对话、系统消息 + 变量、抽取各种数据类型（情感/枚举/数字/日期/POJO）、
  * 给 POJO 字段加描述、以及带记忆的 AI 服务。运行某个示例时，直接运行对应的内部类即可。
+ * 文件末尾新增了一个《企业实战示例》——问题提单 + 入库存 JSON + 多租户记忆隔离 的模拟。
  */
 public class _08_AIServiceExamples {
 
     // 顶层共享的聊天模型：所有内部示例类复用它（仅 POJO 相关示例为了开启 json 模式会另建模型）
-    static ChatModel model = OpenAiChatModel.builder()
-            .apiKey(ApiKeys.OPENAI_API_KEY)
-            .modelName(GPT_4_O_MINI)
-            .timeout(ofSeconds(60))
-            .build();
+    static ChatModel model = Model.MODEL;
 
     ////////////////// 简单示例 //////////////////////
 
@@ -157,7 +182,8 @@ public class _08_AIServiceExamples {
              * @return 要点列表，每项是一个字符串
              */
             @SystemMessage("把用户的每条消息概括成{{n}}个要点。只输出要点本身。")
-            List<String> summarize(@UserMessage String text, @V("n") int n);
+            @UserMessage("{{text}}")
+            List<String> summarize(@V("text")String text, @V("n") int n);
         }
 
         /**
@@ -220,7 +246,7 @@ public class _08_AIServiceExamples {
              * @param text 待分析的文本（作为 {{it}} 填入用户消息）
              * @return 情感倾向枚举（POSITIVE / NEUTRAL / NEGATIVE）
              */
-            @UserMessage("分析{{it}}的情感倾向")
+            @UserMessage("分析{{it}}的情感倾向") // 只有一个参数的时候，不需要写@V
             Sentiment analyzeSentimentOf(String text);
 
             /**
@@ -747,6 +773,219 @@ public class _08_AIServiceExamples {
             // 用户 2 提问：AI 应该记得 id=2 的用户叫 Francine
             System.out.println(assistant.chat(2, "我叫什么名字？"));
             // 输出示例：你的名字是 Francine。
+        }
+    }
+
+    ////////////////////////// 企业实战示例 /////////////////////////
+
+    /**
+     * 企业实战综合示例：问题提单 + 入库存 JSON + 多租户记忆隔离。
+     * <p>
+     * 模拟企业里最常见的一个场景——"智能工单客服"：
+     * 用户（或多租户里的某个租户）描述遇到的问题，AI 服务自动：
+     * 1. <b>抽取结构化工单</b>：从自然语言里提取等级、所属模块、标题、描述，返回强类型的
+     *    {@code Ticket} POJO（企业里可再序列化成 JSON 入库存数据库，例如用 Jackson/Gson/MyBatis 落库）。
+     * 2. <b>按租户隔离记忆</b>：用 @MemoryId 区分不同租户，每个租户拥有独立的对话记忆，
+     *    这样租户 A 能追问"我上一条说的是什么"，而租户 B 完全不受影响。
+     * <p>
+     * 这演示了 AiService 三件套在企业中的组合拳：
+     * 结构化输出（Ticket）+ 多租户记忆隔离（@MemoryId + chatMemoryProvider）+ 声明式提示词模板。
+     */
+    static class Enterprise_Ticket_Agent_Example {
+
+        /**
+         * 优先级枚举。
+         */
+        enum Priority {
+            LOW,        // 低
+            MEDIUM,     // 中
+            HIGH,       // 高
+            CRITICAL    // 紧急
+        }
+
+        /**
+         * 工单状态枚举。
+         */
+        enum Status {
+            NEW,        // 新建
+            IN_PROGRESS,// 处理中
+            RESOLVED    // 已解决
+        }
+
+        /**
+         * 工单 POJO：由 AI 从用户描述中抽取并填装的强类型结构体。
+         * <p>
+         * 在企业里，这样一个对象可以直接交给 Jackson/Gson/MyBatis 序列化入库，
+         * 或放到消息队列传给下游工单系统——这正是"结构化输出"的工程价值：
+         * 上层不用手写正则去解析 LLM 的自由文本。
+         */
+        static class Ticket {
+
+            @Description("工单唯一编号，例如 T-1001")
+            private String ticketId;
+
+            @Description("优先级，只能取枚举值")
+            private Priority priority;
+
+            @Description("所属模块，例如 登录/订单/支付/客服")
+            private String module;
+
+            @Description("工单标题，一句话概括，不超过 20 字")
+            private String title;
+
+            @Description("问题的详细描述，2到3句话，忠实于用户原话，不要虚构")
+            private String description;
+
+            @Description("工单状态，新建时固定为 NEW")
+            private Status status;
+
+            @Override
+            public String toString() {
+                return "Ticket { ticketId=" + ticketId +
+                        ", priority=" + priority +
+                        ", module='" + module + '\'' +
+                        ", title='" + title + '\'' +
+                        ", description='" + description + '\'' +
+                        ", status=" + status +
+                        " }";
+            }
+        }
+
+        /**
+         * AI 服务接口：智能工单代理。
+         * <p>
+         * 三个方法分别对应三件事：
+         * - {@code createTicket}    只做一件事：抽取结构化工单（入库存 JSON 的原材料）。
+         * - {@code chat}            多租户客服对话（带按租户隔离的记忆），让用户能追问、能补充信息。
+         * - {@code shortTicket}     让 AI 用一句话概括问题，作为对话中的"速记"输出。
+         */
+        interface TicketAgent {
+
+            /**
+             * 从用户的一句话里抽取一张结构化工单。
+             *
+             * @param description 用户描述的问题
+             * @return 强类型工单对象（可直接序列化入库）
+             */
+            @SystemMessage("你是企业的智能客服，负责把用户的报障转成结构化工单。")
+            @UserMessage("请从下面的问题描述中抽取一张工单：{{description}}")
+            Ticket createTicket(@V("description") String description);
+
+            /**
+             * 多租户客服对话，自动带当前租户的独立记忆。
+             *
+             * @param tenantId    租户标识（每个租户独立记忆）
+             * @param userMessage 用户本轮消息
+             * @return 客服回复
+             */
+            @SystemMessage("你是企业的客服代表，语气专业、耐心、简洁。回答前可结合本租户此前的对话记忆。")
+            String chat(@MemoryId String tenantId, @UserMessage String userMessage);
+
+            /**
+             * 用一句话概括问题（演示返回类型可复用结构化输出思路，这里简单返回 String）。
+             *
+             * @param description 用户描述的问题
+             * @return 一句话概括
+             */
+            @UserMessage("请用一句话概括下面问题：{{description}}")
+            String shortTicket(@V("description") String description);
+        }
+
+        /**
+         * 模拟的"工单仓库"（内存版）。真实企业里这一步通常是：
+         * 把 AI 抽出的 {@code Ticket} 对象 → 序列化成 JSON → 写入数据库 / 消息队列 / 工单系统。
+         */
+        static class TicketRepository {
+
+            private final AtomicLong seq = new AtomicLong(1000);
+            // 用租户 id 分组存放，模拟"每个租户各自一张工单表"
+            private final Map<String, Map<String, Ticket>> store = new ConcurrentHashMap<>();
+
+            /**
+             * 保存一张工单（自动分配编号，并记到对应租户下）。
+             *
+             * @param tenantId 租户标识
+             * @param ticket   未编号的工单对象
+             * @return 保存后的工单（带编号）
+             */
+            Ticket save(String tenantId, Ticket ticket) {
+                // 为工单生成唯一编号
+                if (ticket.ticketId == null) {
+                    ticket.ticketId = "T-" + seq.incrementAndGet();
+                }
+                store.computeIfAbsent(tenantId, k -> new ConcurrentHashMap<>()).put(ticket.ticketId, ticket);
+                return ticket;
+            }
+
+            /**
+             * 打印某个租户的全部工单（模拟"查库"）。
+             *
+             * @param tenantId 租户标识
+             */
+            void dump(String tenantId) {
+                System.out.println("  —— 租户 " + tenantId + " 的工单列表 ——");
+                store.getOrDefault(tenantId, Map.of()).values()
+                        .forEach(t -> System.out.println("     " + t));
+            }
+        }
+
+        /**
+         * 程序入口 main 方法。
+         */
+        public static void main(String[] args) {
+
+            // 开启 json 模式，让 POJO 抽取更可靠（严格结构输出）
+            ChatModel ticketModel = OpenAiChatModel.builder()
+                    .apiKey(ApiKeys.OPENAI_API_KEY)
+                    .modelName(GPT_4_O_MINI)
+                    .responseFormat("json_schema")
+                    .strictJsonSchema(true)
+                    .timeout(ofSeconds(60))
+                    .build();
+
+            // 内存版工单仓库
+            TicketRepository repository = new TicketRepository();
+
+            // 1) 面向"抽取结构化工单"的 AiService：注入上面开启了 json 模式的模型
+            TicketAgent ticketAgent = AiServices.builder(TicketAgent.class)
+                    .chatModel(ticketModel)
+                    // 多租户记忆隔离：每个租户 id 各分配一份独立的记忆（最多 10 条消息）
+                    .chatMemoryProvider(tenantId -> MessageWindowChatMemory.withMaxMessages(10))
+                    .build();
+
+            // 2) 租户 "acme" 报障：AI 自动抽取成一张结构化工单
+            System.out.println("场景一：租户 acme 报障，AI 抽取结构化工单");
+            String complaint = "我们线上支付模块在高峰期经常超时，很多客户付款失败，非常紧急，请帮忙处理！";
+            Ticket t1 = ticketAgent.createTicket(complaint);
+            // 企业落库：把这张工单"存起来"（真实场景 = 序列化 JSON 后入库/发消息）
+            repository.save("acme", t1);
+            System.out.println("  抽取出的工单（可序列化 JSON 入库）：" + t1);
+
+            // 3) 租户 "globex" 也来报障，各自独立
+            System.out.println("\n场景二：租户 globex 报障，AI 抽取结构化工单");
+            Ticket t2 = ticketAgent.createTicket("我们登录页偶尔 500，请问能排查一下吗？");
+            repository.save("globex", t2);
+            System.out.println("  抽取出的工单：" + t2);
+
+            // 4) 多租户记忆隔离验证：并入不同的 @MemoryId，AI 记住各自上下文
+            System.out.println("\n场景三：多租户记忆隔离——acme 能追问自己的上下文");
+            ticketAgent.chat("acme", "我是 acme 的运维，刚才的支付超时工单能加急吗？");
+            // 追问：因为带了 acme 的记忆，AI 能"记得"刚才是支付超时的事
+            String followUp = ticketAgent.chat("acme", "我刚才报的问题，处理优先级是多少？可以查我之前说的话吗？");
+            System.out.println("  acme 追问：" + followUp);
+            // 租户 globex 问"我刚才说的是什么"——它只记得自己的登录 500，不记得 acme 的支付超时
+            String otherTenant = ticketAgent.chat("globex", "我刚才说的是什么问题？");
+            System.out.println("  globex 问自己的上下文：" + otherTenant);
+
+            // 5) 一句话速记输出
+            System.out.println("\n场景四：一句话概括");
+            String summary = ticketAgent.shortTicket("我们支付模块周五晚上 8 点开始大批量报错，客户都下不了单。");
+            System.out.println("  概括：" + summary);
+
+            // 6) 查库视角：各租户工单彼此隔离
+            System.out.println("\n场景五：查看各租户工单（模拟查库）");
+            repository.dump("acme");
+            repository.dump("globex");
         }
     }
 }

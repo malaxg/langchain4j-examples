@@ -37,12 +37,6 @@ public class _05_Memory {
      */
     public static void main(String[] args) throws ExecutionException, InterruptedException {
 
-        // 构建流式聊天模型
-        OpenAiStreamingChatModel model = OpenAiStreamingChatModel.builder()
-                .apiKey(ApiKeys.OPENAI_API_KEY)
-                .modelName(GPT_4_O_MINI)
-                .build();
-
         // 创建对话记忆：最多保留 1000 个 Token。
         // 传入 OpenAiTokenCountEstimator 是为了用 OpenAI 的分词规则来统计每条消息占多少 Token
         ChatMemory chatMemory = TokenWindowChatMemory.withMaxTokens(1000, new OpenAiTokenCountEstimator(GPT_4_O_MINI));
@@ -65,7 +59,7 @@ public class _05_Memory {
         System.out.print("[AI]: ");
 
         // 3. 用"记忆里的全部消息"调用流式模型，拿到第一轮 AI 回答（内部会流式打印）
-        AiMessage aiMessage1 = streamChat(model, chatMemory);
+        AiMessage aiMessage1 = streamChat(Model.STREAM_MODULE, chatMemory);
         chatMemory.add(aiMessage1);      // 重要！把 AI 回答也加入记忆，模型才能记住本轮内容
 
         // 4. 第二轮用户提问：让 AI 针对第一点给出具体代码示例（这是"靠记忆才能回答"的追问）
@@ -77,7 +71,7 @@ public class _05_Memory {
         System.out.print("[AI]: ");
 
         // 5. 再次用记忆里的全部消息调用模型——此时包含第一轮问答，模型能记住上文并正确回答
-        AiMessage aiMessage2 = streamChat(model, chatMemory);
+        AiMessage aiMessage2 = streamChat(Model.STREAM_MODULE, chatMemory);
         chatMemory.add(aiMessage2);      // 第二轮回答也加入记忆，为后续更多轮对话做准备
     }
 

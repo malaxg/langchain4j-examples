@@ -27,10 +27,6 @@ public class _04_Streaming {
     public static void main(String[] args) {
 
         // 构建流式聊天模型：与普通 ChatModel 不同的是要用 OpenAiStreamingChatModel
-        OpenAiStreamingChatModel model = OpenAiStreamingChatModel.builder()
-                .apiKey(ApiKeys.OPENAI_API_KEY)
-                .modelName(GPT_4_O_MINI)
-                .build();
 
         // 准备提示词：让模型写一首关于程序员和空指针（null-pointer）的短诗
         String prompt = "请写一首关于程序员和空指针的搞笑短诗，最多 10 行";
@@ -45,7 +41,7 @@ public class _04_Streaming {
         CompletableFuture<ChatResponse> futureChatResponse = new CompletableFuture<>();
 
         // 调用流式聊天接口，并传入一个 StreamingChatResponseHandler 匿名类来处理三种事件：
-        model.chat(prompt, new StreamingChatResponseHandler() {
+        Model.STREAM_MODULE.chat(prompt, new StreamingChatResponseHandler() {
 
             /**
              * 每生成一小段文本就回调一次：把这一段立即打印出来（不换行，实现打字机效果）。

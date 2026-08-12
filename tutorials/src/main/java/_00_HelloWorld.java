@@ -18,17 +18,8 @@ public class _00_HelloWorld {
      * @param args 命令行参数，本示例未使用
      */
     public static void main(String[] args) {
-
-        // 1. 构建聊天模型：使用"建造者模式"（Builder Pattern）配置模型
-        //    - apiKey:    指定 OpenAI 的 API Key（来自 ApiKeys 类）
-        //    - modelName: 指定要使用的模型，GPT_4_O_MINI 是 OpenAI 的轻量级模型（又快又便宜）
-        ChatModel model = OpenAiChatModel.builder()
-                .apiKey(ApiKeys.OPENAI_API_KEY)
-                .modelName(GPT_4_O_MINI)
-                .build();
-
         // 2. 调用 chat() 方法，把用户消息发送给模型，并同步等待模型返回完整回答
-        String answer = model.chat("打个招呼，说一句你好");
+        String answer = Model.MODEL.chat("打个招呼，说一句你好");
 
         // 3. 把模型的回答打印到控制台
         System.out.println(answer);
