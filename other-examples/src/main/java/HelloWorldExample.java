@@ -28,7 +28,7 @@ public class HelloWorldExample {
                 .build();
 
         // 开始与模型交互：把用户消息发给模型，并拿到回答字符串
-        String answer = model.chat("Hello world!");
+        String answer = model.chat("你好，世界！");
 
         System.out.println(answer); // 你好！今天需要我帮你做点什么吗？
     }

@@ -38,7 +38,7 @@ public class SimpleServiceExample {
         Assistant assistant = AiServices.create(Assistant.class, chatModel);
 
         // 调用接口方法与模型对话
-        String answer = assistant.chat("Hello");
+        String answer = assistant.chat("你好");
 
         System.out.println(answer); // 你好！今天需要我帮你做点什么吗？
     }

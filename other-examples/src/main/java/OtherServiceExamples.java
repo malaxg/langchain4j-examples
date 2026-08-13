@@ -63,10 +63,10 @@ public class OtherServiceExamples {
             SentimentAnalyzer sentimentAnalyzer = AiServices.create(SentimentAnalyzer.class, chatModel);
 
             // 接口方法返回枚举，模型会根据消息输出 POSITIVE / NEUTRAL / NEGATIVE
-            Sentiment sentiment = sentimentAnalyzer.analyzeSentimentOf("It is good!");
+            Sentiment sentiment = sentimentAnalyzer.analyzeSentimentOf("这很好！");
             System.out.println(sentiment); // POSITIVE（正面）
 
-            boolean positive = sentimentAnalyzer.isPositive("It is bad!");
+            boolean positive = sentimentAnalyzer.isPositive("这很糟糕！");
             System.out.println(positive); // false（不是正面）
         }
     }
@@ -106,9 +106,8 @@ public class OtherServiceExamples {
 
             NumberExtractor extractor = AiServices.create(NumberExtractor.class, chatModel);
 
-            // 一段英文文本，其中隐藏着答案"42"
-            String text = "After countless millennia of computation, the supercomputer Deep Thought finally announced " +
-                    "that the answer to the ultimate question of life, the universe, and everything was forty two.";
+            // 一段中文文本，其中隐藏着答案"42"
+            String text = "超级计算机“深思”经过无数年的运算，终于宣布：关于生命、宇宙以及一切终极问题的答案是四十二。";
 
             int intNumber = extractor.extractInt(text);
             System.out.println(intNumber); // 42
@@ -156,9 +155,8 @@ public class OtherServiceExamples {
 
             DateTimeExtractor extractor = AiServices.create(DateTimeExtractor.class, chatModel);
 
-            // 一段英文文本，里面隐含着日期 1968-07-04 和 23:45 这两个时间信息
-            String text = "The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight," +
-                    " following the celebrations of Independence Day.";
+            // 一段中文文本，里面隐含着日期 1968-07-04 和 23:45 这两个时间信息
+            String text = "1968 年独立日庆典结束后的那个傍晚，四周一片宁静，离午夜只差 15 分钟。";
 
             LocalDate date = extractor.extractDateFrom(text);
             System.out.println(date); // 1968-07-04
@@ -184,7 +182,7 @@ public class OtherServiceExamples {
         static class Person {
 
             // @Description 是可选的字段描述，帮助 LLM 更准确地理解每个字段的含义
-            @Description("first name of a person") // 此为发送给 LLM 的描述文本，需保留英文以利于模型理解
+            @Description("一个人的名字") // 此为发送给 LLM 的描述文本，帮助模型正确填充 Person 字段
             // 你也可以添加可选描述，帮助 LLM 更好地理解某个字段
             private String firstName;
             private String lastName;
@@ -225,10 +223,9 @@ public class OtherServiceExamples {
 
             PersonExtractor extractor = AiServices.create(PersonExtractor.class, chatModel);
 
-            // 一段描述人物信息的英文文本，从中要提取出 John Doe 与其出生日期
-            String text = "In 1968, amidst the fading echoes of Independence Day, "
-                    + "a child named John arrived under the calm evening sky. "
-                    + "This newborn, bearing the surname Doe, marked the start of a new journey.";
+            // 一段描述人物信息的中文文本，从中要提取出 John Doe 与其出生日期
+            String text = "1968 年，在独立日余音未尽时，一个名叫 John 的孩子在宁静的夜空下诞生。"
+                    + "这个姓 Doe 的新生儿，开启了他人生的新旅程。";
 
 
             Person person = extractor.extractPersonFrom(text);
@@ -249,13 +246,13 @@ public class OtherServiceExamples {
         // 菜谱 POJO，每个字段的 @Description 都用于指导 LLM 生成内容
         static class Recipe {
 
-            @Description("short title, 3 words maximum") // 发送给 LLM：短标题，最多 3 个单词
+            @Description("简短的标题，最多 3 个单词") // 发送给 LLM：短标题，最多 3 个单词
             private String title;
 
-            @Description("short description, 2 sentences maximum") // 发送给 LLM：简短描述，最多 2 句话
+            @Description("简短的描述，最多 2 句话") // 发送给 LLM：简短描述，最多 2 句话
             private String description;
 
-            @Description("each step should be described in 4 words, steps should rhyme") // 发送给 LLM：每步 4 个单词且需押韵
+            @Description("每一步用 4 个单词描述，步骤之间要押韵") // 发送给 LLM：每步 4 个单词且需押韵
             private List<String> steps;
 
             private Integer preparationTimeMinutes;
@@ -273,7 +270,7 @@ public class OtherServiceExamples {
 
         // @StructuredPrompt 用模板定义结构化提示词，{{dish}} 和 {{ingredients}} 是占位符
         // （由对象的属性自动填充）
-        @StructuredPrompt("Create a recipe of a {{dish}} that can be prepared using only {{ingredients}}")
+        @StructuredPrompt("创作一道只用{{ingredients}}就能制作的{{dish}}的菜谱")
         static class CreateRecipePrompt {
 
             private String dish;              // 菜名（对应 {{dish}}）
@@ -308,7 +305,7 @@ public class OtherServiceExamples {
             Chef chef = AiServices.create(Chef.class, chatModel);
 
             // 方式一调用：传入若干配料，模型生成对应菜谱
-            Recipe recipe = chef.createRecipeFrom("cucumber", "tomato", "feta", "onion", "olives");
+            Recipe recipe = chef.createRecipeFrom("黄瓜", "西红柿", "羊奶酪", "洋葱", "橄榄");
 
             System.out.println(recipe);
             // 可能的输出（模型输出内容不固定）：
@@ -327,8 +324,8 @@ public class OtherServiceExamples {
 
             // 方式二调用：先构造结构化 prompt 对象再调用
             CreateRecipePrompt prompt = new CreateRecipePrompt();
-            prompt.dish = "salad";
-            prompt.ingredients = asList("cucumber", "tomato", "feta", "onion", "olives");
+            prompt.dish = "沙拉";
+            prompt.ingredients = asList("黄瓜", "西红柿", "羊奶酪", "洋葱", "橄榄");
 
             Recipe anotherRecipe = chef.createRecipe(prompt);
             System.out.println(anotherRecipe);
@@ -347,7 +344,7 @@ public class OtherServiceExamples {
         interface Chef {
 
             // @SystemMessage 指定系统提示词，设定 LLM 扮演一个专业的、友好礼貌且简洁的厨师
-            @SystemMessage("You are a professional chef. You are friendly, polite and concise.")
+            @SystemMessage("你是一名专业厨师。你待人友好、礼貌且言简意赅。")
             String answer(String question);
         }
 
@@ -355,7 +352,7 @@ public class OtherServiceExamples {
 
             Chef chef = AiServices.create(Chef.class, chatModel);
 
-            String answer = chef.answer("How long should I grill chicken?");
+            String answer = chef.answer("鸡肉应该烤多久？");
             System.out.println(answer); // 烤鸡肉通常每面需要大约 10-15 分钟，具体取决于 ...
         }
     }
@@ -373,13 +370,13 @@ public class OtherServiceExamples {
 
             // @V 用于把方法参数绑定到模板变量：
             // text 绑定到 {{text}}，language 绑定到 {{language}}
-            @SystemMessage("You are a professional translator into {{language}}")
-            @UserMessage("Translate the following text: {{text}}")
+            @SystemMessage("你是一名专业的{{language}}翻译")
+            @UserMessage("翻译以下文本：{{text}}")
             String translate(@V("text") String text, @V("language") String language);
 
             // 返回 List<String>：让模型用 {{n}} 条要点总结每条用户消息，仅输出要点即可
             // @UserMessage 直接修饰参数，表示该参数就是用户消息本体
-            @SystemMessage("Summarize every message from user in {{n}} bullet points. Provide only bullet points.")
+            @SystemMessage("将用户的每条消息总结成 {{n}} 条要点。只提供要点内容。")
             List<String> summarize(@UserMessage String text, @V("n") int n);
         }
 
@@ -387,15 +384,14 @@ public class OtherServiceExamples {
 
             TextUtils utils = AiServices.create(TextUtils.class, chatModel);
 
-            // 把"你好，最近怎么样?"翻译成意大利语
-            String translation = utils.translate("Hello, how are you?", "italian");
+            // 把"你好，最近怎么样？"翻译成意大利语
+            String translation = utils.translate("你好，最近怎么样？", "意大利语");
             System.out.println(translation); // Ciao, come stai?
 
 
-            // 一段要总结为要点的英文文本
-            String text = "AI, or artificial intelligence, is a branch of computer science that aims to create " +
-                    "machines that mimic human intelligence. This can range from simple tasks such as recognizing " +
-                    "patterns or speech to more complex tasks like making decisions or predictions.";
+            // 一段要总结为要点的中文文本
+            String text = "人工智能（AI）是计算机科学的一个分支，旨在创造能够模仿人类智能的机器。"
+                    + "这可以涵盖从识别图案或语音等简单任务，到做出决策或预测等更复杂的任务。";
 
             // 用 3 条要点总结上文
             List<String> bulletPoints = utils.summarize(text, 3);
@@ -429,7 +425,7 @@ public class OtherServiceExamples {
 
             TextUtils utils = AiServices.create(TextUtils.class, chatModel);
 
-            String translation = utils.translate("Hello, how are you?", "italian");
+            String translation = utils.translate("你好，最近怎么样？", "意大利语");
             System.out.println(translation); // Ciao, come stai?
         }
     }
@@ -452,7 +448,7 @@ public class OtherServiceExamples {
 
             Assistant assistant = AiServices.create(Assistant.class, chatModel);
 
-            String answer = assistant.chat("Klaus", "Hi, tell me my name if you see it.");
+            String answer = assistant.chat("Klaus", "嗨，如果你能看到我的名字就告诉我。");
             System.out.println(answer); // 你好！你的名字是 Klaus。今天需要我帮你做点什么吗？
         }
     }
@@ -476,9 +472,9 @@ public class OtherServiceExamples {
             // 根据 memoryId 返回不同的系统提示词：memoryId 为 1 时用户被称作"陛下"
             Function<Object, String> systemMessageProvider = (memoryId) -> {
                 if (memoryId.equals("1")) {
-                    return "You are a helpful assistant. The user prefers to be called 'Your Majesty'.";
+                    return "你是一个乐于助人的助手，用户希望被称作“陛下”。";
                 } else {
-                    return "You are a helpful assistant.";
+                    return "你是一个乐于助人的助手。";
                 }
             };
 
@@ -488,8 +484,8 @@ public class OtherServiceExamples {
                     .systemMessageProvider(systemMessageProvider)
                     .build();
 
-            System.out.println(assistant.chat("1", "Hi")); // 你好，陛下！今天有什么能为您效劳？
-            System.out.println(assistant.chat("2", "Hi")); // 你好！今天需要我帮你做点什么吗？
+            System.out.println(assistant.chat("1", "你好")); // 你好，陛下！今天有什么能为您效劳？
+            System.out.println(assistant.chat("2", "你好")); // 你好！今天需要我帮你做点什么吗？
         }
     }
 }

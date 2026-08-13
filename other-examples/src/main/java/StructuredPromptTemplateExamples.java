@@ -35,7 +35,7 @@ public class StructuredPromptTemplateExamples {
     static class Simple_Structured_Prompt_Example {
 
         // @StructuredPrompt 定义模板：{{dish}}、{{ingredients}} 会由该对象的同名属性填充
-        @StructuredPrompt("Create a recipe of a {{dish}} that can be prepared using only {{ingredients}}")
+        @StructuredPrompt("创作一道只用{{ingredients}}就能制作的{{dish}}的菜谱")
         static class CreateRecipePrompt {
 
             private String dish;              // 菜名，对应 {{dish}}
@@ -46,8 +46,8 @@ public class StructuredPromptTemplateExamples {
 
             // 构造提示词对象并填入变量值
             CreateRecipePrompt createRecipePrompt = new CreateRecipePrompt();
-            createRecipePrompt.dish = "salad";
-            createRecipePrompt.ingredients = asList("cucumber", "tomato", "feta", "onion", "olives");
+            createRecipePrompt.dish = "沙拉";
+            createRecipePrompt.ingredients = asList("黄瓜", "西红柿", "羊奶酪", "洋葱", "橄榄");
 
             // 用 StructuredPromptProcessor 把对象转换成最终的 Prompt
             Prompt prompt = StructuredPromptProcessor.toPrompt(createRecipePrompt);
@@ -68,18 +68,18 @@ public class StructuredPromptTemplateExamples {
 
         // 多行模板：要求模型按照给定的固定结构来组织回答
         @StructuredPrompt({
-                "Create a recipe of a {{dish}} that can be prepared using only {{ingredients}}.",
-                "Structure your answer in the following way:",
+                "创作一道只用{{ingredients}}就能制作的{{dish}}的菜谱。",
+                "请用以下方式组织你的回答：",
 
-                "Recipe name: ...",
-                "Description: ...",
-                "Preparation time: ...",
+                "菜名：...",
+                "描述：...",
+                "准备时间：...",
 
-                "Required ingredients:",
+                "所需配料：",
                 "- ...",
                 "- ...",
 
-                "Instructions:",
+                "制作步骤：",
                 "- ...",
                 "- ..."
         })
@@ -93,8 +93,8 @@ public class StructuredPromptTemplateExamples {
 
             // 构造提示词对象并填入变量值
             CreateRecipePrompt createRecipePrompt = new CreateRecipePrompt();
-            createRecipePrompt.dish = "salad";
-            createRecipePrompt.ingredients = asList("cucumber", "tomato", "feta", "onion", "olives");
+            createRecipePrompt.dish = "沙拉";
+            createRecipePrompt.ingredients = asList("黄瓜", "西红柿", "羊奶酪", "洋葱", "橄榄");
 
             // 把对象转换成最终的 Prompt 再发给模型
             Prompt prompt = StructuredPromptProcessor.toPrompt(createRecipePrompt);

@@ -24,21 +24,21 @@ public class ServiceWithToolsExample {
     static class Calculator {
 
         // @Tool 注解用于描述这个工具的功能，字符串内容会作为工具说明发给 LLM
-        @Tool("Calculates the length of a string")
+        @Tool("计算字符串的长度")
         int stringLength(String s) {
-            System.out.println("Called stringLength with s='" + s + "'");
+            System.out.println("调用了 stringLength，s='" + s + "'");
             return s.length();
         }
 
-        @Tool("Calculates the sum of two numbers")
+        @Tool("计算两个数字之和")
         int add(int a, int b) {
-            System.out.println("Called add with a=" + a + ", b=" + b);
+            System.out.println("调用了 add，a=" + a + ", b=" + b);
             return a + b;
         }
 
-        @Tool("Calculates the square root of a number")
+        @Tool("计算一个数的平方根")
         double sqrt(int x) {
-            System.out.println("Called sqrt with x=" + x);
+            System.out.println("调用了 sqrt，x=" + x);
             return Math.sqrt(x);
         }
     }
@@ -74,7 +74,7 @@ public class ServiceWithToolsExample {
 
         // 一个需要精确计算的问题：
         // 先分别求 "hello" 和 "world" 这两个单词的字母个数并相加，再开平方
-        String question = "What is the square root of the sum of the numbers of letters in the words \"hello\" and \"world\"?";
+        String question = "单词 \"hello\" 和 \"world\" 的字母个数之和的平方根是多少？";
 
         String answer = assistant.chat(question);
 

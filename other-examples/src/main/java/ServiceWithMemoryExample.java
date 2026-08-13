@@ -50,11 +50,11 @@ public class ServiceWithMemoryExample {
                 .build();
 
         // 第一轮对话：告诉助手自己的名字
-        String answer = assistant.chat("Hello! My name is Klaus.");
+        String answer = assistant.chat("你好！我叫 Klaus。");
         System.out.println(answer); // 你好 Klaus！今天需要我帮你做点什么吗？
 
         // 第二轮对话：由于有记忆，助手能记起名字并回答
-        String answerWithName = assistant.chat("What is my name?");
+        String answerWithName = assistant.chat("我叫什么名字？");
         System.out.println(answerWithName); // 你的名字是 Klaus。
     }
 }

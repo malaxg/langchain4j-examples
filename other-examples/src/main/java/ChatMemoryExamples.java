@@ -45,13 +45,13 @@ public class ChatMemoryExamples {
         // 在保存之前，你也可以按需对消息进行加工/修改。
 
         // 第一轮对话：先把用户消息加入记忆，再用记忆中的全部消息去调用模型。
-        chatMemory.add(userMessage("Hello, my name is Klaus"));
+        chatMemory.add(userMessage("你好，我叫 Klaus"));
         AiMessage answer = model.chat(chatMemory.messages()).aiMessage();
         System.out.println(answer.text()); // 你好 Klaus！今天需要我帮你做点什么吗？
         chatMemory.add(answer); // 把模型的回答也加入记忆
 
         // 第二轮对话：由于记忆里保存了上一轮的问答，模型此时应该能记得"Klaus"这个名字。
-        chatMemory.add(userMessage("What is my name?"));
+        chatMemory.add(userMessage("我叫什么名字？"));
         AiMessage answerWithName = model.chat(chatMemory.messages()).aiMessage();
         System.out.println(answerWithName.text()); // 你的名字是 Klaus。
         chatMemory.add(answerWithName);

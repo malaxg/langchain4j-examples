@@ -51,9 +51,9 @@ public class ServiceWithDynamicToolsExample {
                 .build();
 
         // 提出需要精确计算的数学问题（模型会借助工具执行 JS 算出结果）
-        interact(assistant, "What is the square root of 49506838032859?");
-        interact(assistant, "Capitalize every third letter: abcabc");
-        interact(assistant, "What is the number of hours between 17:00 on 21 Feb 1988 and 04:00 on 12 Apr 2014?");
+        interact(assistant, "49506838032859 的平方根是多少？");
+        interact(assistant, "将字符串 abcabc 中每第三个字母大写");
+        interact(assistant, "1988 年 2 月 21 日 17:00 到 2014 年 4 月 12 日 04:00 之间有多少个小时？");
     }
 
     /**
@@ -63,9 +63,9 @@ public class ServiceWithDynamicToolsExample {
      * @param userMessage 用户发送的消息
      */
     private static void interact(Assistant assistant, String userMessage) {
-        System.out.println("[User]: " + userMessage);
+        System.out.println("[用户]: " + userMessage);
         String answer = assistant.chat(userMessage);
-        System.out.println("[Assistant]: " + answer);
+        System.out.println("[助手]: " + answer);
         System.out.println();
         System.out.println();
     }

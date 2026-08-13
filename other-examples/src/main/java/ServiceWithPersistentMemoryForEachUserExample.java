@@ -70,14 +70,14 @@ public class ServiceWithPersistentMemoryForEachUserExample {
                 .build();
 
         // 用户 1 和用户 2 各自报出名字（会被分别持久化到本地文件）
-        System.out.println(assistant.chat(1, "Hello, my name is Klaus"));
-        System.out.println(assistant.chat(2, "Hi, my name is Francine"));
+        System.out.println(assistant.chat(1, "你好，我叫 Klaus"));
+        System.out.println(assistant.chat(2, "嗨，我叫 Francine"));
 
         // 现在，把上面两行注释掉，取消下面两行注释，然后再次运行。
         // 由于记忆已按用户持久化，各用户仍能记起自己的名字。
 
-        // System.out.println(assistant.chat(1, "What is my name?"));
-        // System.out.println(assistant.chat(2, "What is my name?"));
+        // System.out.println(assistant.chat(1, "我叫什么名字？"));
+        // System.out.println(assistant.chat(2, "我叫什么名字？"));
     }
 
     /**

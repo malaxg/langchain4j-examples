@@ -23,12 +23,12 @@ public class PromptTemplateExamples {
         public static void main(String[] args) {
 
             // 定义模板：{{it}} 是占位符，表示"它"
-            PromptTemplate promptTemplate = PromptTemplate.from("Say 'hi' in {{it}}.");
+            PromptTemplate promptTemplate = PromptTemplate.from("用{{it}}说“你好”。");
 
-            // 把 "German" 填入 {{it}} 生成最终的 Prompt
-            Prompt prompt = promptTemplate.apply("German");
+            // 把 "德语" 填入 {{it}} 生成最终的 Prompt
+            Prompt prompt = promptTemplate.apply("德语");
 
-            System.out.println(prompt.text()); // Say 'hi' in German.（用德语说"hi"）
+            System.out.println(prompt.text()); // 用德语说“你好”。
         }
     }
 
@@ -42,16 +42,16 @@ public class PromptTemplateExamples {
         public static void main(String[] args) {
 
             // 定义含两个占位符的模板
-            PromptTemplate promptTemplate = PromptTemplate.from("Say '{{text}}' in {{language}}.");
+            PromptTemplate promptTemplate = PromptTemplate.from("用{{language}}说“{{text}}”。");
 
             // 用 Map 提供所有变量的值（key = 变量名，value = 值）
             Map<String, Object> variables = new HashMap<>();
-            variables.put("text", "hi");          // {{text}} = "hi"
-            variables.put("language", "German");  // {{language}} = "German"
+            variables.put("text", "你好");        // {{text}} = "你好"
+            variables.put("language", "德语");    // {{language}} = "德语"
 
             Prompt prompt = promptTemplate.apply(variables);
 
-            System.out.println(prompt.text()); // Say 'hi' in German.
+            System.out.println(prompt.text()); // 用德语说“你好”。
         }
     }
 }

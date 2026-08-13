@@ -46,7 +46,7 @@ public class ServiceWithStreamingExample {
         Assistant assistant = AiServices.create(Assistant.class, model);
 
         // 启动流式对话：此时不会立即返回完整结果，而是返回一个 TokenStream
-        TokenStream tokenStream = assistant.chat("Tell me a joke");
+        TokenStream tokenStream = assistant.chat("给我讲个笑话");
 
         // 用一个 Future 来异步收集最终的完整响应
         CompletableFuture<ChatResponse> futureResponse = new CompletableFuture<>();

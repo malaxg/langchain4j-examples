@@ -52,19 +52,19 @@ public class ServiceWithMemoryForEachUserExample {
                 .build();
 
         // 用户 1（Klaus）打招呼并报出名字
-        System.out.println(assistant.chat(1, "Hello, my name is Klaus"));
+        System.out.println(assistant.chat(1, "你好，我叫 Klaus"));
         // 你好 Klaus！今天需要我帮你做点什么吗？
 
         // 用户 2（Francine）打招呼并报出名字（与用户 1 共用同一模型但记忆独立）
-        System.out.println(assistant.chat(2, "Hello, my name is Francine"));
+        System.out.println(assistant.chat(2, "你好，我叫 Francine"));
         // 你好 Francine！今天需要我帮你做点什么吗？
 
         // 用户 1 问自己的名字 → 应回答 Klaus（说明记忆按用户隔离生效）
-        System.out.println(assistant.chat(1, "What is my name?"));
+        System.out.println(assistant.chat(1, "我叫什么名字？"));
         // 你的名字是 Klaus。
 
         // 用户 2 问自己的名字 → 应回答 Francine
-        System.out.println(assistant.chat(2, "What is my name?"));
+        System.out.println(assistant.chat(2, "我叫什么名字？"));
         // 你的名字是 Francine。
     }
 }

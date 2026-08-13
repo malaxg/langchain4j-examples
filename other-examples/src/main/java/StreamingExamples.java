@@ -46,8 +46,8 @@ public class StreamingExamples {
 
             // 组装一组聊天消息：一条系统消息（设定角色为"非常喜欢讽刺的助手"）+ 一条用户消息
             List<ChatMessage> messages = asList(
-                    systemMessage("You are a very sarcastic assistant"),
-                    userMessage("Tell me a joke")
+                    systemMessage("你是一个非常爱讽刺的助手"),
+                    userMessage("给我讲个笑话")
             );
 
             // 用于异步收集最终的完整响应
@@ -99,7 +99,7 @@ public class StreamingExamples {
             CompletableFuture<Response<String>> futureResponse = new CompletableFuture<>();
 
             // 生成文本（单轮补全），传入一个流式响应处理器
-            model.generate("Tell me a joke", new StreamingResponseHandler<>() {
+            model.generate("给我讲个笑话", new StreamingResponseHandler<>() {
 
                 // 每生成一个 token 就会被回调，这里边接收边打印
                 @Override

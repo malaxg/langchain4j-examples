@@ -67,13 +67,13 @@ public class ServiceWithPersistentMemoryExample {
                 .build();
 
         // 第一轮对话：告诉助手自己的名字（此记录会写入本地文件）
-        String answer = assistant.chat("Hello! My name is Klaus.");
+        String answer = assistant.chat("你好！我叫 Klaus。");
         System.out.println(answer); // 你好 Klaus！今天需要我帮你做点什么吗？
 
         // 现在，把上面这两行注释掉，取消下面两行的注释，然后再次运行。
         // 由于记忆已持久化，助手仍能记起上一轮的对话（名字是 Klaus）。
 
-        // String answerWithName = assistant.chat("What is my name?");
+        // String answerWithName = assistant.chat("我叫什么名字？");
         // System.out.println(answerWithName); // 你的名字是 Klaus。
     }
 

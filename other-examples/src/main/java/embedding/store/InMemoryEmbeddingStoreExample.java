@@ -36,17 +36,17 @@ public class InMemoryEmbeddingStoreExample {
         EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
 
         // 文档 1：先包装成 TextSegment，再向量化，最后连同内容存入内存库
-        TextSegment segment1 = TextSegment.from("I like football.");
+        TextSegment segment1 = TextSegment.from("我喜欢足球。");
         Embedding embedding1 = embeddingModel.embed(segment1).content();
         embeddingStore.add(embedding1, segment1);
 
         // 文档 2：同样流程
-        TextSegment segment2 = TextSegment.from("The weather is good today.");
+        TextSegment segment2 = TextSegment.from("今天天气很好。");
         Embedding embedding2 = embeddingModel.embed(segment2).content();
         embeddingStore.add(embedding2, segment2);
 
         // 构造查询：把查询文本向量化，并搜索库中与其最相似的片段
-        Embedding queryEmbedding = embeddingModel.embed("What is your favourite sport?").content();
+        Embedding queryEmbedding = embeddingModel.embed("你最喜欢的运动是什么？").content();
         EmbeddingSearchRequest embeddingSearchRequest = EmbeddingSearchRequest.builder()
                 .queryEmbedding(queryEmbedding) // 查询向量
                 .maxResults(1)                  // 最多返回 1 条结果
@@ -56,7 +56,7 @@ public class InMemoryEmbeddingStoreExample {
         EmbeddingMatch<TextSegment> embeddingMatch = matches.get(0);
 
         System.out.println(embeddingMatch.score()); // 0.8144288515898701（相似度得分，越高越相关）
-        System.out.println(embeddingMatch.embedded().text()); // I like football.（最匹配的文档内容）
+        System.out.println(embeddingMatch.embedded().text()); // 我喜欢足球。（最匹配的文档内容）
 
         // 内存版 Embedding 存储支持序列化/反序列化为 JSON
         // String serializedStore = embeddingStore.serializeToJson();

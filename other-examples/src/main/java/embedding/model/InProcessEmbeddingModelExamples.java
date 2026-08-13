@@ -28,7 +28,7 @@ public class InProcessEmbeddingModelExamples {
 
         public static void main(String[] args) throws IOException {
 
-            String text = "Let's demonstrate that embedding can be done within a Java process and entirely offline.";
+            String text = "让我们来演示，embedding 可以在 Java 进程内完全离线完成。";
 
             // 需要引入 "langchain4j-embeddings-all-minilm-l6-v2" 依赖（Maven/Gradle），详见 pom.xml
             // 创建本地（进程内）Embedding 模型：模型文件会随依赖一起提供，无需联网
@@ -90,7 +90,7 @@ public class InProcessEmbeddingModelExamples {
             // 官方预打包版本（用于和自定义版本对比，验证两者结果是否一致）
             AllMiniLmL6V2EmbeddingModel packaged = new AllMiniLmL6V2EmbeddingModel();
 
-            String englishText = "Hello, how are you doing?";
+            String englishText = "你好，最近怎么样？";
 
             // 分别用自定义模型和预打包模型对同一文本向量化
             Embedding customEmbedding = custom.embed(englishText).content();

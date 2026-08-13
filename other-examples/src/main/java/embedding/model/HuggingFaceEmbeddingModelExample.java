@@ -35,7 +35,7 @@ public class HuggingFaceEmbeddingModelExample {
                 .build();
 
         // 把文本转成 Embedding 向量
-        Response<Embedding> response = embeddingModel.embed("Hello, how are you?");
+        Response<Embedding> response = embeddingModel.embed("你好，最近怎么样？");
         System.out.println(response);
     }
 }

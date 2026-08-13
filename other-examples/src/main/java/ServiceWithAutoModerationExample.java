@@ -55,11 +55,11 @@ public class ServiceWithAutoModerationExample {
 
         try {
             // 发送一条带有攻击性/威胁性的消息，应该会被审核模型拦截
-            chat.chat("I WILL KILL YOU!!!");
+            chat.chat("我要杀了你！！！");
         } catch (ModerationException e) {
             // 捕获到审核异常，说明内容违反了安全策略
             System.out.println(e.getMessage());
-            // 文本 "I WILL KILL YOU!!!" 违反了内容安全策略
+            // 文本 "我要杀了你！！！" 违反了内容安全策略
         }
     }
 }

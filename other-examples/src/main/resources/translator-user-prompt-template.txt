@@ -1,1 +1,1 @@
-Translate the following text: {{text}}
+翻译以下文本：{{text}}
