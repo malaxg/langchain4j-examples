@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LangChain4j 总体学习指导（总览）</title>
+<style>
+  :root {
+    --primary: #1a73e8;
+    --dark: #202124;
+    --line: #dadce0;
+    --bg-box: #f8f9fa;
+    --accent: #e8f0fe;
+    --good: #188038;
+    --warn: #b06006;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--dark);
+    line-height: 1.75;
+    margin: 0;
+    background: #fff;
+  }
+  .container { max-width: 1000px; margin: 0 auto; padding: 24px 28px 80px; }
+  h1 { font-size: 30px; color: var(--primary); border-bottom: 3px solid var(--primary); padding-bottom: 10px; }
+  h2 { font-size: 23px; margin-top: 44px; color: #174ea6; border-left: 5px solid var(--primary); padding-left: 12px; }
+  h3 { font-size: 18px; margin-top: 28px; }
+  h4 { font-size: 16px; margin-top: 22px; color: #3c4043; }
+  p { margin: 10px 0; }
+  blockquote {
+    margin: 14px 0; padding: 12px 18px;
+    background: var(--bg-box); border-left: 4px solid var(--primary);
+  }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--accent); }
+  code {
+    background: #f1f3f4; padding: 2px 6px; border-radius: 4px;
+    font-family: "SF Mono", Consolas, monospace; font-size: 13px;
+  }
+  pre {
+    background: #f8f9fa; border: 1px solid var(--line); border-radius: 6px;
+    padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; }
+
+  /* 能力版图盒子 */
+  .cap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .cap-card {
+    border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+    background: var(--bg-box);
+  }
+  .cap-card h4 { margin: 0 0 6px; color: var(--primary); }
+  .cap-card ul { margin: 0; padding-left: 18px; font-size: 13px; }
+  .cap-card li { margin: 2px 0; }
+
+  /* 架构流向图 */
+  .arch {
+    text-align: center; background: #fdfdff; border: 1px dashed var(--primary);
+    border-radius: 12px; padding: 18px; margin: 18px 0; font-size: 14px;
+  }
+  .arch-box {
+    display: inline-block; border: 2px solid var(--primary); border-radius: 8px;
+    background: #fff; padding: 8px 16px; margin: 6px auto; font-weight: 600;
+    min-width: 240px; text-align: center;
+  }
+  .arch-box.tier { background: var(--accent); }
+  .arch-arrow { color: var(--primary); font-size: 18px; line-height: 1.2; margin: 2px 0; }
+
+  /* 依赖行 */
+  .arch-row { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin: 6px 0; }
+  .arch-small {
+    border: 1px solid var(--line); border-radius: 6px; background: #fff;
+    padding: 6px 12px; font-size: 13px;
+  }
+
+  /* 流程图（案例） */
+  .flow {
+    background: #fff; border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 18px; margin: 14px 0;
+  }
+  .flow-steps { font-family: "SF Mono", Consolas, monospace; font-size: 13px; }
+  .flow-step {
+    display: block; border: 1px solid #b7c0ce; border-left: 4px solid var(--primary);
+    background: #fbfcff; border-radius: 6px; padding: 6px 12px; margin: 6px 0;
+    max-width: 620px;
+  }
+  .flow-step.hl { border-left-color: var(--good); background: #f6fff7; }
+  .flow-step.agent { border-left-color: #b06006; background: #fffaf2; }
+  .flow-arrow { color: #5f6368; padding-left: 22px; }
+
+  .tag { display: inline-block; font-size: 12px; border-radius: 10px; padding: 1px 9px; margin-left: 8px; vertical-align: middle; }
+  .tag.yes { background: #e6f4ea; color: var(--good); }
+  .tag.no { background: #fef7e0; color: var(--warn); }
+
+  .toc { background: var(--bg-box); border: 1px solid var(--line); border-radius: 10px; padding: 14px 20px; }
+  .toc a { color: var(--primary); text-decoration: none; }
+  .toc li { margin: 3px 0; }
+  .note { font-size: 13px; color: #5f6368; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>LangChain4j 总体学习指导（总览）</h1>
+
+<blockquote>
+  本页是站在<strong>更高角度</strong>审视 LangChain4j 的总览文档，帮助你建立"这个框架到底能干什么、各个组件怎么协作、在企业里能落地成什么"的整体心智模型。<br>
+  配套各模块的 <code>学习指导.md</code>（按优先级排了每个类的学习顺序）；本页回答<em>"为什么"</em>和<em>"整体长什么样"</em>。
+</blockquote>
+
+<div class="toc">
+  <strong>目录</strong>
+  <ul>
+    <li><a href="#one">一、LangChain4j 是什么</a></li>
+    <li><a href="#two">二、LangChain4j 的能力版图</a></li>
+    <li><a href="#three">三、架构关系（核心概念分层）</a></li>
+    <li><a href="#four">四、重要类及它们的关系</a></li>
+    <li><a href="#five">五、企业落地案例（14 个，含流程图）</a></li>
+    <li><a href="#six">六、给你的学习路径</a></li>
+  </ul>
+</div>
+
+<h2 id="one">一、LangChain4j 是什么</h2>
+<p><strong>一句话</strong>：LangChain4j 是给 <strong>Java 生态</strong> 的 LangChain——一个把"大语言模型（LLM）"封装成正经 Java 库的框架。</p>
+<p>它解决的痛点：</p>
+<ul>
+  <li><strong>厂商众多</strong>（OpenAI、Azure、Google Gemini、Claude、Ollama、通义……）各自 API 不同。LangChain4j 用<strong>统一接口</strong>抽象掉，换厂商只改一行配置。</li>
+  <li><strong>LLM 输出是自由文本</strong>，不可靠。LangChain4j 提供<strong>结构化输出</strong>，直接转成枚举 / POJO / List。</li>
+  <li><strong>LLM 无记忆、无外部工具、无私有知识</strong>。LangChain4j 提供<strong>记忆、工具调用（Function Calling）、RAG（检索增强）</strong>三板斧补齐。</li>
+</ul>
+<p>一句话总结它的哲学：<strong>像写普通 Java 代码一样写 AI 功能，业务代码不感知背后是 LLM。</strong></p>
+
+<h2 id="two">二、LangChain4j 的能力版图</h2>
+<div class="cap-grid">
+  <div class="cap-card"><h4>① 模型接入</h4><ul><li>Chat / 流式</li><li>Embedding</li><li>Image / Audio</li><li>多厂商统一接口</li></ul></div>
+  <div class="cap-card"><h4>② 提示词引擎</h4><ul><li>模板 + 变量</li><li>结构化提示词</li></ul></div>
+  <div class="cap-card"><h4>③ 记忆</h4><ul><li>多轮上下文</li><li>按用户隔离</li><li>持久化</li></ul></div>
+  <div class="cap-card"><h4>④ AI 服务</h4><ul><li><strong>最核心</strong></li><li>声明式接口</li><li>自动结构化输出</li></ul></div>
+  <div class="cap-card"><h4>⑤ 工具调用</h4><ul><li>@Tool</li><li>Function Calling</li><li>Agent 基础</li></ul></div>
+  <div class="cap-card"><h4>⑥ RAG 检索</h4><ul><li>切块 / 向量化</li><li>检索 / 重排</li><li>多源 / 路由</li></ul></div>
+  <div class="cap-card"><h4>⑦ Agent 编排</h4><ul><li>顺序/循环/并行</li><li>Supervisor</li><li>人机协作</li></ul></div>
+  <div class="cap-card"><h4>⑧ 可观测性/集成</h4><ul><li>Listener</li><li>日志 / 成本</li><li>Spring 等框架</li></ul></div>
+</div>
+
+<table>
+  <tr><th>能力</th><th>说明</th><th>对应学习模块</th></tr>
+  <tr><td>1. 模型接入</td><td>聊天/流式/向量/图/音，多厂商统一接口</td><td>tutorials、open-ai-examples</td></tr>
+  <tr><td>2. 提示词引擎</td><td>模板 + 变量 + 结构化提示词</td><td>tutorials</td></tr>
+  <tr><td>3. 记忆</td><td>多轮上下文、按用户隔离、持久化</td><td>tutorials、other-examples</td></tr>
+  <tr><td>4. AI 服务</td><td><strong>最核心</strong>：声明式接口 + 自动结构化输出</td><td>tutorials、spring-boot-example</td></tr>
+  <tr><td>5. 工具调用</td><td>让 LLM 调用你的 Java 方法</td><td>tutorials、agentic-tutorial</td></tr>
+  <tr><td>6. RAG 检索</td><td>私有知识库问答，增强、重排、多源</td><td>rag-examples、pgvector-example</td></tr>
+  <tr><td>7. Agent 编排</td><td>多个 Agent 组成工作流</td><td>agentic-tutorial、mcp-example</td></tr>
+  <tr><td>8. 可观测性/集成</td><td>监听、成本、日志；Spring 等框架</td><td>open-ai-examples、spring-boot-example</td></tr>
+</table>
+
+<h2 id="three">三、架构关系（核心概念分层）</h2>
+<div class="arch">
+  <div class="arch-box tier">业务代码 / Controller（REST 层）</div>
+  <div class="arch-arrow">▼ 调用</div>
+  <div class="arch-box">AI 服务（AiService）<br><span class="note">你只定义接口 + 注解，框架生成实现</span></div>
+  <div class="arch-row">
+    <div class="arch-small">聊天模型 ChatModel</div>
+    <div class="arch-small">记忆 ChatMemory</div>
+    <div class="arch-small">工具 @Tool</div>
+  </div>
+  <div class="arch-arrow">▼</div>
+  <div class="arch-row">
+    <div class="arch-small">EmbeddingModel 向量化</div>
+    <div class="arch-small">EmbeddingStore 向量库</div>
+    <div class="arch-small">ContentRetriever 检索(RAG)</div>
+  </div>
+  <div class="arch-arrow">▼</div>
+  <div class="arch-row">
+    <div class="arch-small">DocumentLoader</div>
+    <div class="arch-small">DocumentSplitter 切块</div>
+    <div class="arch-small">RetrievalAugmentor</div>
+  </div>
+</div>
+<p><strong>关键：AiService 是"心脏"。</strong> 它把上面所有零件（模型、记忆、工具、检索器）用接口 + 注解的方式"拼"起来，业务代码只跟接口打交道。</p>
+
+<h4>AiService 装配关系（代码视角）</h4>
+<pre><code>AiServices.builder(Assistant.class)
+    .chatModel(c)               // 装 模型
+    .chatMemoryProvider(...)    // 装 记忆
+    .tools(toolInstance)        // 装 工具
+    .contentRetriever(r)        // 装 检索(RAG)
+    .build();                   // 生成 Assistant 实例</code></pre>
+
+<h2 id="four">四、LangChain4j 重要类及它们的关系</h2>
+
+<h3>1. 模型层（最少要认识的接口）</h3>
+<table>
+  <tr><th>类 / 接口</th><th>作用</th><th>关系</th></tr>
+  <tr><td><code>ChatModel</code></td><td>同步聊天，<code>chat()</code> 返回完整回答</td><td>最常用，任何厂商实现它</td></tr>
+  <tr><td><code>StreamingChatModel</code></td><td>流式聊天，回调式逐段返回</td><td>与 ChatModel 同族，二选一</td></tr>
+  <tr><td><code>EmbeddingModel</code></td><td>把文本转成向量（<code>embed()</code>）</td><td>供 RAG 用</td></tr>
+  <tr><td><code>ImageModel</code> / <code>AudioModel</code></td><td>生成图 / 转写音频</td><td>多模态专属</td></tr>
+  <tr><td><code>TokenCounter</code></td><td>统计 token 数（计成本）</td><td>配合监控</td></tr>
+</table>
+<p class="note">实现类关系：<code>OpenAiChatModel</code>、<code>OllamaChatModel</code>、<code>GoogleAiGeminiChatModel</code> 等全部实现 <code>ChatModel</code> 接口 —— 所以代码可无缝换厂商。</p>
+
+<h3>2. 消息与提示词层</h3>
+<table>
+  <tr><th>类</th><th>作用</th></tr>
+  <tr><td><code>SystemMessage</code> / <code>UserMessage</code> / <code>AiMessage</code></td><td>三类消息，构成对话上下文</td></tr>
+  <tr><td><code>PromptTemplate</code></td><td><code>{{变量}}</code> 模板，自动替换参数</td></tr>
+  <tr><td><code>StructuredPrompt</code></td><td>用 POJO 生成结构化提示词，参数自动映射字段</td></tr>
+</table>
+
+<h3>3. 数据解析 / 结构化输出层</h3>
+<table>
+  <tr><th>类</th><th>作用</th></tr>
+  <tr><td><code>ChatResponse</code></td><td>一次模型回答的包装（含内容、token 用量）</td></tr>
+  <tr><td><code>output.structured.Description</code></td><td>给 POJO 字段加"说明"，帮 LLM 理解字段含义</td></tr>
+  <tr><td>（隐式）返回类型转换</td><td>AiService 依据方法返回类型自动把文本解析成枚举/数字/日期/POJO/List</td></tr>
+</table>
+
+<h3>4. 记忆层</h3>
+<table>
+  <tr><th>类</th><th>作用</th></tr>
+  <tr><td><code>ChatMemory</code></td><td>对话记忆接口</td></tr>
+  <tr><td><code>MessageWindowChatMemory</code></td><td>滑动窗口记忆（最多 N 条）</td></tr>
+  <tr><td><code>ChatMemoryProvider</code></td><td>按 <code>@MemoryId</code> 为每个用户/会话提供独立记忆</td></tr>
+  <tr><td>持久化实现</td><td>MapDB 等把记忆落盘，重启不丢</td></tr>
+</table>
+
+<h3>5. AI 服务层（核心中的核心）</h3>
+<table>
+  <tr><th>类 / 注解</th><th>作用</th><th>关系</th></tr>
+  <tr><td><code>AiServices</code></td><td><strong>工厂</strong>：<code>create()</code>/<code>builder()</code> 生成接口实现</td><td>装配器</td></tr>
+  <tr><td><code>@SystemMessage</code> / <code>@UserMessage</code></td><td>声明系统提示词 / 用户消息模板</td><td>用在接口方法上</td></tr>
+  <tr><td><code>@V</code></td><td>把方法参数绑定到模板变量</td><td><code>@UserMessage("...{{x}}")</code> + <code>@V("x")</code></td></tr>
+  <tr><td><code>@MemoryId</code></td><td>标记"用户/会话标识"参数</td><td>配合 <code>chatMemoryProvider</code></td></tr>
+  <tr><td><code>@Tool</code></td><td>标记方法为"模型可调用的工具"</td><td>用在工具类方法上（可注入 AiService）</td></tr>
+  <tr><td><code>TokenStream</code></td><td>流式 AI 服务返回的流对象</td><td><code>StreamingChatModel</code> 配套</td></tr>
+</table>
+
+<h3>6. RAG 层</h3>
+<table>
+  <tr><th>类</th><th>作用</th><th>关系</th></tr>
+  <tr><td><code>Document</code> / <code>TextSegment</code></td><td>文档与切块后的文本段</td><td>检索的基本单元</td></tr>
+  <tr><td><code>DocumentSplitter</code></td><td>把大文档切成小段</td><td>每个段独立向量化</td></tr>
+  <tr><td><code>EmbeddingStore</code></td><td>向量库（pgvector/Redis/内存等实现）</td><td>存向量</td></tr>
+  <tr><td><code>EmbeddingStoreIngestor</code></td><td>一键完成"切块→向量化→入库"</td><td>组装上面两者</td></tr>
+  <tr><td><code>ContentRetriever</code></td><td>检索器接口：根据问题取相关文本</td><td><code>EmbeddingStoreContentRetriever</code> 是常用实现</td></tr>
+  <tr><td><code>RetrievalAugmentor</code></td><td>编排查询压缩/路由/重排等</td><td>装配到 AiService</td></tr>
+  <tr><td><code>QueryRouter</code> / <code>Reranker</code> / <code>QueryTransformer</code></td><td>高级 RAG：路由、重排、查询压缩</td><td>挂在 RetrievalAugmentor 内</td></tr>
+</table>
+
+<pre><code>文档 → DocumentLoader → DocumentSplitter 切块
+     → EmbeddingModel 向量化 → EmbeddingStore 入库
+  （运行期）问题 → ContentRetriever 检索 → 相关 TextSegment
+     → 拼接进提示词 → 交给 ChatModel → 基于资料回答</code></pre>
+
+<h2 id="five">五、企业落地案例（14 个，含流程图）</h2>
+
+<h3>案例 1：智能客服（个性路由 + 工具 + RAG + 持久记忆）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">用户提问</span>
+  <span class="flow-arrow">└⟶ REST Controller</span>
+  <span class="flow-arrow">└⟶ AiService.chat(@MemoryId 用户, 消息)</span>
+  <span class="flow-step hl">├⟶ ChatMemoryProvider 按用户隔离记忆</span>
+  <span class="flow-step hl">├⟶ ContentRetriever 检索售后政策 (RAG)</span>
+  <span class="flow-step hl">├⟶ @Tool: 查订单 / 退款 / 改物流</span>
+  <span class="flow-step agent">└⟶ ChatModel 组织回答 → 返回 / 触发退款工单落库</span>
+</div></div>
+
+<h3>案例 2：简历/JD 智能筛选（AI 信息抽取 + 结构化入库）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">上传简历(PDF)</span>
+  <span class="flow-arrow">└⟶ DocumentLoader 解析文本</span>
+  <span class="flow-arrow">└⟶ AiService 从文本中抽取简历实体</span>
+  <span class="flow-step hl">└⟶ 返回强类型 Resume POJO（姓名/技能/年限）</span>
+  <span class="flow-step hl">└⟶ 序列化 JSON 入库 / 发消息队列</span>
+  <span class="flow-step agent">└⟶ 按技能向量化，支持语义检索候选</span>
+</div></div>
+
+<h3>案例 3：工单自动分诊（结构化输出 + 分类）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">用户提交工单文本</span>
+  <span class="flow-arrow">└⟶ AiService.analyze(工单)</span>
+  <span class="flow-step hl">└⟶ 返回 {类别枚举, 紧急度, 归属团队, 建议动作}</span>
+  <span class="flow-step agent">└⟶ 自动创建工单并派给对应团队 + 打标签</span>
+</div></div>
+
+<h3>案例 4：企业知识库问答（多源 RAG + 重排）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">用户提问</span>
+  <span class="flow-arrow">└⟶ QueryRouter 路由到正确知识源(订单/人力/财务…)</span>
+  <span class="flow-step hl">└⟶ 多 ContentRetriever 并行检索</span>
+  <span class="flow-step hl">└⟶ Reranker 重排取最相关</span>
+  <span class="flow-step agent">└⟶ 拼接上下文 + 给 ChatModel → 回答 + 引用来源</span>
+</div></div>
+
+<h3>案例 5：智能工单闭环 Agent（顺序工作流 + 工具 + 人工审核）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">用户报障</span>
+  <span class="flow-arrow">└⟶ Agent1 受理：抽取问题&类别</span>
+  <span class="flow-step hl">└⟶ Agent2 诊断：检索知识库 + 查日志(工具) 给方案</span>
+  <span class="flow-step hl">└⟶ 非自动可解 → 主管 Agent (Supervisor) 派单给工程师</span>
+  <span class="flow-step agent">└⟶ Human-in-the-loop：关键操作等人工确认</span>
+  <span class="flow-step agent">└⟶ 解决后 Agent3 汇总并回执给用户</span>
+</div></div>
+
+<h3>案例 6：舆情/评论情感监控（Embedding 分类 + 定时任务）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">评论流</span>
+  <span class="flow-arrow">└⟶ EmbeddingModel 向量化 → 与情感样本库比对</span>
+  <span class="flow-step hl">└⟶ 或 AiService 判断情感枚举(正面/中性/负面)</span>
+  <span class="flow-step agent">└⟶ 负面 → 触发告警 / 生成跟进工单</span>
+</div></div>
+
+<h3>案例 7：多语言翻译与本地化（提示词模板 + AI 服务）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">原文 + 目标语言</span>
+  <span class="flow-arrow">└⟶ AiService.translate(text, language)</span>
+  <span class="flow-step hl">└⟶ @SystemMessage("你是专业{{language}}翻译") + 风格约束</span>
+  <span class="flow-step agent">└⟶ 返回目标语言文本 → 存入 CMS</span>
+</div></div>
+
+<h3>案例 8：SQL / 报表智能生成（Text-to-SQL + RAG）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">自然语言问题</span>
+  <span class="flow-arrow">└⟶ 检索目标表结构(约束) 拼接进提示词</span>
+  <span class="flow-step hl">└⟶ AiService 生成 SQL → 校验(沙箱/人工确认)</span>
+  <span class="flow-step agent">└⟶ 执行查询 → 结果经 AiService 转成自然语言摘要</span>
+</div></div>
+
+<h3>案例 9：会议纪要与行动项提取（文档处理 + 结构化输出）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">录音转写文本</span>
+  <span class="flow-arrow">└⟶ DocumentLoader 读取</span>
+  <span class="flow-step hl">└⟶ AiService 产出 MeetingNotes POJO</span>
+  <span class="flow-step hl">   {主题, 决议, 行动项[责任人,截止], 风险}</span>
+  <span class="flow-step agent">└⟶ 自动生成到项目管理系统 / 发通知</span>
+</div></div>
+
+<h3>案例 10：合规审查（多 Agent 并行 + 汇总 + 人工复核）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">待审文本</span>
+  <span class="flow-arrow">└⟶ 并行：Agent法律 / Agent品牌 / Agent隐私</span>
+  <span class="flow-step hl">├⟶ 各自返回 {是否通过, 风险点}</span>
+  <span class="flow-step hl">└⟶ 聚合 Agent 汇总风险清单</span>
+  <span class="flow-step agent">└⟶ 高风险 → 人工复核 (Human-in-the-loop) → 合规结论</span>
+</div></div>
+
+<h3>案例 11：智能搜索增强（Query 压缩 + 混合检索）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">用户多轮追问</span>
+  <span class="flow-arrow">└⟶ QueryCompression 压缩成独立问题</span>
+  <span class="flow-step hl">└⟶ 混合检索(向量库 + 全文检索) → 融合排序</span>
+  <span class="flow-step agent">└⟶ 返回相关片段 + 原文链接</span>
+</div></div>
+
+<h3>案例 12：Agent 接入外部服务（MCP 工具）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">用户意图"在新系统里给张三创建订单"</span>
+  <span class="flow-arrow">└⟶ AiService(Agent) 决定用哪个工具</span>
+  <span class="flow-step hl">└⟶ 通过 MCP Server 调用 CRM 创建订单工具</span>
+  <span class="flow-step agent">└⟶ 返回操作结果 → Agent 组织话术回复用户</span>
+</div></div>
+
+<h3>案例 13：模型路由与降级（多厂商 + 成本优化）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">请求</span>
+  <span class="flow-arrow">└⟶ 路由策略(问题复杂度)</span>
+  <span class="flow-step hl">├⟶ 简单 → ChatModel(便宜小模型)</span>
+  <span class="flow-step agent">└⟶ 复杂/失败 → 降级 ChatModel(大模型/备用厂商)</span>
+</div></div>
+
+<h3>案例 14：流式聊天应用（SSE 流式 + 前端打字机）</h3>
+<div class="flow"><div class="flow-steps">
+  <span class="flow-step">前端消息</span>
+  <span class="flow-arrow">└⟶ Controller 返回 SSE 流</span>
+  <span class="flow-step hl">└⟶ StreamingChatModel 逐段推送 → 浏览器打字机展示</span>
+  <span class="flow-step agent">└⟶ 消息同时写入 ChatMemory 积累上下文</span>
+</div></div>
+
+<h2 id="six">六、给你的学习路径</h2>
+<ol>
+  <li><strong>先用本总览</strong>建立整体地图——知道每个能力在哪、类之间什么关系。</li>
+  <li><strong>再进各模块的学习指导.md</strong>，按文件优先级逐个跑。</li>
+  <li><strong>带着"企业案例"去学</strong>：每学一个能力（如 RAG、工具、记忆），回来看它对应当标的案例，理解这个能力在真实产品里解决什么问题。</li>
+  <li>面试时能讲清 <strong>AiService + 四个组件（记忆/工具/检索/模型）如何组装</strong>，再结合 2~3 个亲手跑的案例（如客服、简历抽取、知识库），就是一份有说服力的 AI 开发能力证明。</li>
+</ol>
+
+<blockquote>
+  建议路径：<code>tutorials</code> 入门 → <code>customer-support-agent-example</code> 看完整闭环 →
+  <code>agentic-tutorial</code> 学编排 → <code>rag-examples</code> 学检索 →
+  <code>spring-boot-example</code> 学生产落地。这条路走完，LangChain4j 的核心能力就都掌握了。
+</blockquote>
+
+<p class="note footer" style="text-align:center;margin-top:40px;padding-top:16px;border-top:1px solid var(--line);">
+  LangChain4j 总体学习指导 · 仅用于个人学习
+</p>
+</div>
+</body>
+</html>
