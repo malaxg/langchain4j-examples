@@ -6,22 +6,22 @@
 <title>流程图 - _9a_HumanInTheLoop_Simple_Validator</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background: #eef1f6; padding: 28px 16px; color: #2d3748; }
+  body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background: #2b3440; padding: 28px 16px; color: #2d3748; }
   .page { max-width: 900px; margin: 0 auto; }
   .header { text-align: center; margin-bottom: 30px; }
-  .header h1 { font-size: 22px; color: #1a202c; }
-  .header p { color: #718096; font-size: 14px; margin-top: 6px; }
+  .header h1 { font-size: 22px; color: #e8edf5; }
+  .header p { color: #9aa7b8; font-size: 14px; margin-top: 6px; }
   .flow { display: flex; flex-direction: column; align-items: center; }
   .arrow { width: 2px; height: 20px; background: #94a3b8; position: relative; flex-shrink: 0; }
   .arrow::after { content: ""; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #94a3b8; }
   .arrow-h { height: 2px; width: 26px; background: #94a3b8; position: relative; flex-shrink: 0; align-self: center; }
   .arrow-h::after { content: ""; position: absolute; right: 0; top: 50%; transform: translateY(-50%); border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid #94a3b8; }
 
-  .node { width: 100%; background: #fff; border: 2px solid var(--c, #94a3b8); border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
+  .node { width: 100%; background: #323e4f; border: 2px solid var(--c, #94a3b8); border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
   .node .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 20px; color: #fff; background: var(--c, #94a3b8); }
-  .node .name { font-size: 15px; font-weight: 700; margin-top: 7px; }
-  .node .desc { font-size: 13px; color: #52606d; margin-top: 4px; line-height: 1.55; }
-  .code { font-family: Consolas, monospace; font-size: 12px; color: #7c3aed; background: #f3e8ff; border-radius: 4px; padding: 1px 6px; }
+  .node .name { font-size: 15px; font-weight: 700; margin-top: 7px; color: #e8edf5; }
+  .node .desc { font-size: 13px; color: #b6c2d4; margin-top: 4px; line-height: 1.55; }
+  .code { font-family: Consolas, monospace; font-size: 12px; color: #d8c7ff; background: #2a2540; border-radius: 4px; padding: 1px 6px; }
   .c-start { --c: #10b981; }
   .c-model { --c: #475569; }
   .c-agent { --c: #3b82f6; }
@@ -33,19 +33,19 @@
   .c-output { --c: #64748b; }
   .c-end { --c: #111827; }
 
-  .composite { width: 100%; border-radius: 16px; padding: 16px 18px 18px; background: var(--bg, #f8fafc); border: 2px solid var(--c, #64748b); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .composite { width: 100%; border-radius: 16px; padding: 16px 18px 18px; background: var(--bg, #263042); border: 2px solid var(--c, #64748b); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
   .composite .chead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1.5px dashed rgba(100,116,139,.4); }
   .composite .chead .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 20px; color: #fff; background: var(--c); }
   .composite .chead .name { font-size: 14px; font-weight: 700; color: var(--c); }
   .composite .body { display: flex; flex-direction: column; gap: 12px; }
   .composite .row { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
   .composite .row > .node { flex: 1 1 220px; }
-  .par-note { text-align: center; font-size: 12px; color: #6b7280; margin-top: -4px; }
-  .c-seq { --c: #6366f1; --bg: #eef2ff; }
-  .c-loop { --c: #ef4444; --bg: #fef2f2; }
-  .c-par { --c: #a855f7; --bg: #faf5ff; }
-  .c-cond { --c: #f59e0b; --bg: #fffbeb; }
-  .c-super { --c: #dc2626; --bg: #fef2f2; }
+  .par-note { text-align: center; font-size: 12px; color: #9aa7b8; margin-top: -4px; }
+  .c-seq { --c: #818cf8; --bg: #252e4e; }
+  .c-loop { --c: #f87171; --bg: #3a2626; }
+  .c-par { --c: #c084fc; --bg: #2f2640; }
+  .c-cond { --c: #fbbf24; --bg: #3a3222; }
+  .c-super { --c: #f87171; --bg: #3a2626; }
   .note { width: 100%; margin-top: 24px; background: #fff7e0; border: 1px solid #f2c94c; border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #7a6a10; line-height: 1.6; }
 </style>
 </head>
