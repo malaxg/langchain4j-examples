@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>流程图 - _1a_Basic_Agent_Example</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background: #eef1f6; padding: 28px 16px; color: #2d3748; }
+  .page { max-width: 900px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 30px; }
+  .header h1 { font-size: 22px; color: #1a202c; }
+  .header p { color: #718096; font-size: 14px; margin-top: 6px; }
+  .flow { display: flex; flex-direction: column; align-items: center; }
+  .arrow { width: 2px; height: 20px; background: #94a3b8; position: relative; flex-shrink: 0; }
+  .arrow::after { content: ""; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #94a3b8; }
+  .arrow-h { height: 2px; width: 26px; background: #94a3b8; position: relative; flex-shrink: 0; align-self: center; }
+  .arrow-h::after { content: ""; position: absolute; right: 0; top: 50%; transform: translateY(-50%); border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid #94a3b8; }
+
+  .node { width: 100%; background: #fff; border: 2px solid var(--c, #94a3b8); border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
+  .node .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 20px; color: #fff; background: var(--c, #94a3b8); }
+  .node .name { font-size: 15px; font-weight: 700; margin-top: 7px; }
+  .node .desc { font-size: 13px; color: #52606d; margin-top: 4px; line-height: 1.55; }
+  .code { font-family: Consolas, monospace; font-size: 12px; color: #7c3aed; background: #f3e8ff; border-radius: 4px; padding: 1px 6px; }
+  .c-start { --c: #10b981; }
+  .c-model { --c: #475569; }
+  .c-agent { --c: #3b82f6; }
+  .c-nonai { --c: #0ea5e9; }
+  .c-human { --c: #f59e0b; }
+  .c-condition { --c: #d97706; }
+  .c-adapter { --c: #8b5cf6; }
+  .c-action { --c: #06b6d4; }
+  .c-output { --c: #64748b; }
+  .c-end { --c: #111827; }
+
+  .composite { width: 100%; border-radius: 16px; padding: 16px 18px 18px; background: var(--bg, #f8fafc); border: 2px solid var(--c, #64748b); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .composite .chead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1.5px dashed rgba(100,116,139,.4); }
+  .composite .chead .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 20px; color: #fff; background: var(--c); }
+  .composite .chead .name { font-size: 14px; font-weight: 700; color: var(--c); }
+  .composite .body { display: flex; flex-direction: column; gap: 12px; }
+  .composite .row { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+  .composite .row > .node { flex: 1 1 220px; }
+  .par-note { text-align: center; font-size: 12px; color: #6b7280; margin-top: -4px; }
+  .c-seq { --c: #6366f1; --bg: #eef2ff; }
+  .c-loop { --c: #ef4444; --bg: #fef2f2; }
+  .c-par { --c: #a855f7; --bg: #faf5ff; }
+  .c-cond { --c: #f59e0b; --bg: #fffbeb; }
+  .c-super { --c: #dc2626; --bg: #fef2f2; }
+  .note { width: 100%; margin-top: 24px; background: #fff7e0; border: 1px solid #f2c94c; border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #7a6a10; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <h1>流程图：_1a_Basic_Agent_Example</h1>
+      <p>基础 Agent：单个 Agent 的构建与调用（自由文本输出）</p>
+    </div>
+
+    <div class="flow">
+      <div class="node c-start"><span class="tag">开始</span><div class="name">main() 启动</div><div class="desc">设置日志级别 <span class="code">CustomLogging.setLevel(PRETTY, 300)</span></div></div>
+      <div class="arrow"></div>
+
+      <div class="node c-model"><span class="tag">模型</span><div class="name">定义底层模型 CHAT_MODEL</div><div class="desc"><span class="code">ChatModelProvider.createChatModel()</span></div></div>
+      <div class="arrow"></div>
+
+      <div class="node c-agent"><span class="tag">Agent</span><div class="name">CvGenerator（简历生成器）</div><div class="desc"><span class="code">agentBuilder(CvGenerator.class)</span> → <span class="code">.chatModel(CHAT_MODEL)</span> → <span class="code">.outputKey("masterCv")</span></div></div>
+      <div class="arrow"></div>
+
+      <div class="node c-action"><span class="tag">加载数据</span><div class="name">读取"人生故事"</div><div class="desc"><span class="code">StringLoader.loadFromResource("/documents/user_life_story.txt")</span></div></div>
+      <div class="arrow"></div>
+
+      <div class="node c-agent"><span class="tag">调用 Agent</span><div class="name">生成简历</div><div class="desc"><span class="code">cvGenerator.generateCv(lifeStory)</span> — 参数自动注入 <span class="code">@UserMessage</span> 的 <span class="code">{{lifeStory}}</span></div></div>
+      <div class="arrow"></div>
+
+      <div class="node c-output"><span class="tag">输出</span><div class="name">打印简历</div><div class="desc"><span class="code">System.out.println("=== 简历 CV ===")</span> + 简历内容</div></div>
+      <div class="arrow"></div>
+
+      <div class="node c-end"><span class="tag">结束</span><div class="name">运行完毕</div><div class="desc">1b 将实现同样功能，但采用结构化输出（返回 Cv 对象）</div></div>
+    </div>
+
+    <div class="note"><b>要点：</b>本示例只有一个独立 Agent，不涉及组合/工作流；输出是自由文本 String。单独的 Agent 只有在与其他 Agent 组合时才真正有用。</div>
+  </div>
+</body>
+</html>

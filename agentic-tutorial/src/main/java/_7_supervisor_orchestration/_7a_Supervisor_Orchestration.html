@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>流程图 - _7a_Supervisor_Orchestration</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background: #eef1f6; padding: 28px 16px; color: #2d3748; }
+  .page { max-width: 900px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 30px; }
+  .header h1 { font-size: 22px; color: #1a202c; }
+  .header p { color: #718096; font-size: 14px; margin-top: 6px; }
+  .flow { display: flex; flex-direction: column; align-items: center; }
+  .arrow { width: 2px; height: 20px; background: #94a3b8; position: relative; flex-shrink: 0; }
+  .arrow::after { content: ""; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #94a3b8; }
+  .arrow-h { height: 2px; width: 26px; background: #94a3b8; position: relative; flex-shrink: 0; align-self: center; }
+  .arrow-h::after { content: ""; position: absolute; right: 0; top: 50%; transform: translateY(-50%); border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid #94a3b8; }
+
+  .node { width: 100%; background: #fff; border: 2px solid var(--c, #94a3b8); border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
+  .node .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 20px; color: #fff; background: var(--c, #94a3b8); }
+  .node .name { font-size: 15px; font-weight: 700; margin-top: 7px; }
+  .node .desc { font-size: 13px; color: #52606d; margin-top: 4px; line-height: 1.55; }
+  .code { font-family: Consolas, monospace; font-size: 12px; color: #7c3aed; background: #f3e8ff; border-radius: 4px; padding: 1px 6px; }
+  .c-start { --c: #10b981; }
+  .c-model { --c: #475569; }
+  .c-agent { --c: #3b82f6; }
+  .c-nonai { --c: #0ea5e9; }
+  .c-human { --c: #f59e0b; }
+  .c-condition { --c: #d97706; }
+  .c-adapter { --c: #8b5cf6; }
+  .c-action { --c: #06b6d4; }
+  .c-output { --c: #64748b; }
+  .c-end { --c: #111827; }
+
+  .composite { width: 100%; border-radius: 16px; padding: 16px 18px 18px; background: var(--bg, #f8fafc); border: 2px solid var(--c, #64748b); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .composite .chead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1.5px dashed rgba(100,116,139,.4); }
+  .composite .chead .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 20px; color: #fff; background: var(--c); }
+  .composite .chead .name { font-size: 14px; font-weight: 700; color: var(--c); }
+  .composite .body { display: flex; flex-direction: column; gap: 12px; }
+  .composite .row { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+  .composite .row > .node { flex: 1 1 220px; }
+  .par-note { text-align: center; font-size: 12px; color: #6b7280; margin-top: -4px; }
+  .c-seq { --c: #6366f1; --bg: #eef2ff; }
+  .c-loop { --c: #ef4444; --bg: #fef2f2; }
+  .c-par { --c: #a855f7; --bg: #faf5ff; }
+  .c-cond { --c: #f59e0b; --bg: #fffbeb; }
+  .c-super { --c: #dc2626; --bg: #fef2f2; }
+  .note { width: 100%; margin-top: 24px; background: #fff7e0; border: 1px solid #f2c94c; border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #7a6a10; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <h1>流程图：_7a_Supervisor_Orchestration</h1>
+      <p>监督者式（Supervisor）编排：由监督者 Agent 动态决定调用哪个子 Agent</p>
+    </div>
+
+    <div class="flow">
+      <div class="node c-start"><span class="tag">开始</span><div class="name">main() 启动</div><div class="desc">设置日志级别 <span class="code">PRETTY, 200</span></div></div>
+      <div class="arrow"></div>
+      <div class="node c-model"><span class="tag">模型</span><div class="name">定义底层模型 CHAT_MODEL</div><div class="desc"><span class="code">ChatModelProvider.createChatModel()</span></div></div>
+      <div class="arrow"></div>
+
+      <div class="composite c-super">
+        <div class="chead">
+          <span class="tag">监督者 Agent</span>
+          <span class="name">HiringSupervisor</span>
+          <span class="code">supervisorBuilder().subAgents(...5个子Agent...).contextGenerationStrategy(CHAT_MEMORY_AND_SUMMARIZATION).responseStrategy(SUMMARY)</span>
+        </div>
+        <div class="body">
+          <div class="par-note">◉ 监督者一次只调用 1 个 Agent，调用后重新审视计划，再决定下一个调用谁</div>
+          <div class="row">
+            <div class="node c-agent"><span class="tag">子 Agent</span><div class="name">HrCvReviewer</div><div class="desc">输出：<span class="code">hrReview</span></div></div>
+            <div class="node c-agent"><span class="tag">子 Agent</span><div class="name">ManagerCvReviewer</div><div class="desc">输出：<span class="code">managerReview</span></div></div>
+            <div class="node c-agent"><span class="tag">子 Agent</span><div class="name">TeamMemberCvReviewer</div><div class="desc">输出：<span class="code">teamMemberReview</span></div></div>
+            <div class="node c-agent"><span class="tag">子 Agent</span><div class="name">InterviewOrganizer</div><div class="desc">安排面试（带工具）</div></div>
+            <div class="node c-agent"><span class="tag">子 Agent</span><div class="name">EmailAssistant</div><div class="desc">发邮件（带工具）</div></div>
+          </div>
+          <div class="node c-human"><span class="tag">行为上下文（发给 LLM 的指令）</span><div class="name">supervisorContext(...)</div><div class="desc">"务必使用我们提供的全部评审小组。务必用英语回答。调用 Agent 时使用纯 JSON..."</div></div>
+        </div>
+      </div>
+      <div class="arrow"></div>
+
+      <div class="node c-action"><span class="tag">加载数据</span><div class="name">加载候选人数据 + 启动计时器</div><div class="desc">简历 / 联系方式 / 职位描述 / HR 要求 / 电话面试记录<br><span class="code">start = System.nanoTime()</span></div></div>
+      <div class="arrow"></div>
+
+      <div class="node c-agent"><span class="tag">执行</span><div class="name">用自然语言请求调用监督者</div><div class="desc"><span class="code">hiringSupervisor.invoke("请评估下面的候选人：\n...")</span><br>监督者动态编排：评审 → 安排面试 或 发送拒绝邮件</div></div>
+      <div class="arrow"></div>
+
+      <div class="node c-output"><span class="tag">输出</span><div class="name">打印结果 + 运行耗时</div><div class="desc"><span class="code">=== 监督者运行完成，用时 X 秒 ===</span><br>日志可见最后调用名为 'done' 的 Agent（结束一次调用序列）</div></div>
+      <div class="arrow"></div>
+
+      <div class="node c-end"><span class="tag">结束</span><div class="name">运行完毕</div><div class="desc">进阶用法见 _7b（类型化监督者 / 上下文工程 / 输出策略 / 调用链观察）</div></div>
+    </div>
+
+    <div class="note"><b>要点：</b>监督者一次只调用 1 个 Agent，无法让多个 Agent 并行执行（异步 Agent 会被强制改回同步）。可用快速推理提供商（如 CEREBRAS）加速执行。</div>
+  </div>
+</body>
+</html>
